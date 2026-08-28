@@ -1,0 +1,161 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    /* White palette — pure white paper, true black ink, cobalt clay accent */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 94.1%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 94.1%;
+    --muted-foreground: 0 0% 50.2%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 87.8%;
+    --input: 0 0% 87.8%;
+    --ring: 211 100% 40%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
+  }
+  html {
+    @apply font-sans;
+    font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
+    font-size: 16px;
+  }
+}
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --color-hn-paper: var(--hn-paper);
+  --color-hn-surface: var(--hn-surface);
+  --color-hn-surface-2: var(--hn-surface-2);
+  --color-hn-ink: var(--hn-ink);
+  --color-hn-ink-soft: var(--hn-ink-soft);
+  --color-hn-sub: var(--hn-sub);
+  --color-hn-line: var(--hn-line);
+  --color-hn-line-2: var(--hn-line-2);
+  --color-hn-hair: var(--hn-hair);
+  --color-hn-clay: var(--hn-clay);
+  --color-hn-success: var(--hn-success);
+  --color-hn-wish: var(--hn-wish);
+  --color-hn-cart: var(--hn-cart);
+  --color-hn-pass: var(--hn-pass);
+  --color-hn-detail: var(--hn-detail);
+  --font-sans: var(--font-plus-jakarta-sans), system-ui, sans-serif;
+}
+
+/* HangNeak tokens — outside @layer so unlayered rules apply correctly */
+:root {
+  --hn-paper: #FFFFFF;
+  --hn-surface: #FFFFFF;
+  --hn-surface-2: #FFFFFF;
+  --hn-ink: #000000;
+  --hn-ink-soft: #2A2A2A;
+  --hn-sub: #808080;
+  --hn-line: #E0E0E0;
+  --hn-line-2: #F0F0F0;
+  --hn-hair: #F5F5F5;
+  --hn-clay: #0066CC;
+  --hn-success: #2E9E5B;
+  --hn-wish: #C2605F;
+  --hn-cart: #4B6B8A;
+  --hn-pass: #B0894A;
+  --hn-detail: #7E6CA0;
+  --hn-elev: 0 1px 2px rgba(0,0,0,.06), 0 26px 50px -20px rgba(0,0,0,.18);
+  --hn-elev-sm: 0 6px 14px -8px rgba(0,0,0,.22);
+  --hn-drawer-shadow: 0 -12px 40px -8px rgba(0,0,0,.12);
+  /* bottom padding for scroll areas so content clears the floating BottomNav */
+  --hn-nav-clearance: 6rem;
+}
+
+.dark {
+  --hn-paper: #0D0D0D;
+  --hn-surface: #141414;
+  --hn-surface-2: #1C1C1C;
+  --hn-ink: #F0F0F0;
+  --hn-ink-soft: #D0D0D0;
+  --hn-sub: #888888;
+  --hn-line: #2A2A2A;
+  --hn-line-2: #1E1E1E;
+  --hn-hair: #181818;
+  --hn-clay: #3385D6;
+  --hn-success: #4FB87A;
+  --hn-wish: #D07070;
+  --hn-cart: #6B8BA8;
+  --hn-pass: #C4A060;
+  --hn-detail: #9E8CC0;
+  --hn-elev: 0 1px 2px rgba(0,0,0,.3), 0 26px 50px -20px rgba(0,0,0,.6);
+  --hn-elev-sm: 0 6px 14px -8px rgba(0,0,0,.5);
+  --hn-drawer-shadow: 0 -12px 40px -8px rgba(0,0,0,.4);
+}
+
+/* NProgress bar — themed to match app design */
+#nprogress .bar {
+  background: var(--hn-clay) !important;
+  height: 2px !important;
+  z-index: 9999 !important;
+}
+#nprogress .peg {
+  box-shadow: 0 0 8px var(--hn-clay), 0 0 4px var(--hn-clay) !important;
+}
