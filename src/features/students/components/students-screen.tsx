@@ -118,7 +118,9 @@ export function StudentsScreen() {
               <li key={s.id} className="flex items-center justify-between p-3">
                 <span>
                   {s.name} <span className="text-muted-foreground">— {classroomName(s.classroomId)}</span>{' '}
-                  {linking?.linked ? (
+                  {linkingQuery.isPending || linkingQuery.isError ? (
+                    <span className="text-xs text-muted-foreground">checking...</span>
+                  ) : linking?.linked ? (
                     <span className="text-xs text-green-600">linked</span>
                   ) : (
                     <span className="text-xs text-muted-foreground">

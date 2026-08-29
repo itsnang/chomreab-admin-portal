@@ -7,7 +7,11 @@ const AUTH_PATHS = ['/login']
 
 // A session is established via /auth/admin/login or /auth/teacher/login, both
 // of which reject the wrong role server-side — so presence of a valid session
-// is sufficient here; per-route role checks happen in the dashboard layout.
+// is sufficient here. The dashboard layout only chooses which nav links to
+// show per role; it does not redirect users away from routes their role
+// shouldn't access. There is no per-route access enforcement in the app —
+// enforcement is entirely server-side, via the backend API rejecting
+// mutations the caller's role isn't allowed to perform.
 function isAuthenticated(request: NextRequest): boolean {
   const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value
   if (!accessToken) return false

@@ -67,14 +67,15 @@ interface LinkingCodeApi {
 }
 
 export async function generateLinkingCode(studentId: string): Promise<{ code?: string; error?: string }> {
+  let result: LinkingCodeApi
   try {
-    const result = await apiFetch<LinkingCodeApi>('/parent-links/codes', {
+    result = await apiFetch<LinkingCodeApi>('/parent-links/codes', {
       method: 'POST',
       body: JSON.stringify({ student_id: studentId }),
     })
-    revalidatePath('/students')
-    return { code: result.code }
   } catch (e) {
     return { error: e instanceof ApiError ? e.message : 'Failed to generate code' }
   }
+  revalidatePath('/students')
+  return { code: result.code }
 }
