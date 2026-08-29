@@ -30,7 +30,7 @@ export async function createClassroom(input: ClassroomInput): Promise<{ error?: 
   } catch (e) {
     return { error: e instanceof ApiError ? e.message : 'Failed to create classroom' }
   }
-  revalidatePath('/dashboard/classrooms')
+  revalidatePath('/classrooms')
   return {}
 }
 
@@ -40,6 +40,6 @@ export async function deleteClassroom(id: string): Promise<{ error?: string }> {
   } catch (e) {
     return { error: e instanceof ApiError ? e.message : 'Failed to delete classroom' }
   }
-  revalidatePath('/dashboard/classrooms')
+  revalidatePath('/classrooms')
   return {}
 }
