@@ -43,9 +43,11 @@ export function AttendanceScreen() {
   const activeClass = classesQuery.data?.find((c) => c.classroomId === classroomId)
 
   const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: ['roster', classroomId, date] })
-    queryClient.invalidateQueries({ queryKey: ['my-classes', date] })
-    queryClient.invalidateQueries({ queryKey: ['audit-log', classroomId, date] })
+    return Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['roster', classroomId, date] }),
+      queryClient.invalidateQueries({ queryKey: ['my-classes', date] }),
+      queryClient.invalidateQueries({ queryKey: ['audit-log', classroomId, date] }),
+    ])
   }
 
   const onMark = async (studentId: string, status: AttendanceStatus, note?: string) => {
@@ -56,7 +58,7 @@ export function AttendanceScreen() {
         toast.error(result.error)
         return
       }
-      invalidateAll()
+      await invalidateAll()
     } finally {
       setPendingStudentId(null)
     }
@@ -72,7 +74,7 @@ export function AttendanceScreen() {
         toast.error(result.error)
         return
       }
-      invalidateAll()
+      await invalidateAll()
     } finally {
       setIsBulkPending(false)
     }
@@ -223,17 +225,25 @@ export function AttendanceScreen() {
                 className="rounded-xl overflow-hidden"
                 style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)', boxShadow: 'var(--hn-elev)' }}
               >
-                {roster.map((entry) => (
-                  <RosterRow
-                    key={entry.studentId}
-                    entry={entry}
-                    pending={pendingStudentId === entry.studentId}
-                    onMark={(status, note) => onMark(entry.studentId, status, note)}
-                  />
-                ))}
-                <div className="px-5 py-3.5 text-xs" style={{ background: 'var(--hn-surface-2)', color: 'var(--hn-sub)' }}>
-                  Parents are notified on Telegram the moment you mark their child — unlinked parents are skipped.
-                </div>
+                {roster.length === 0 ? (
+                  <p className="text-sm p-5" style={{ color: 'var(--hn-sub)' }}>
+                    This class has no students yet.
+                  </p>
+                ) : (
+                  <>
+                    {roster.map((entry) => (
+                      <RosterRow
+                        key={entry.studentId}
+                        entry={entry}
+                        pending={pendingStudentId === entry.studentId}
+                        onMark={(status, note) => onMark(entry.studentId, status, note)}
+                      />
+                    ))}
+                    <div className="px-5 py-3.5 text-xs" style={{ background: 'var(--hn-surface-2)', color: 'var(--hn-sub)' }}>
+                      Parents are notified on Telegram the moment you mark their child — unlinked parents are skipped.
+                    </div>
+                  </>
+                )}
               </div>
 
               <div

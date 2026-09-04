@@ -37,10 +37,11 @@ export function StaffScreen() {
     }
     if (result.classroomAssignmentFailed) {
       toast.warning(
-        `Teacher added (password: ${result.temporaryPassword}), but classroom assignment failed. Assign from the Classrooms screen.`
+        `Teacher added (password: ${result.temporaryPassword}), but classroom assignment failed. Assign from the Classrooms screen.`,
+        { duration: Infinity }
       )
     } else {
-      toast.success(`Teacher added. Temporary password: ${result.temporaryPassword}`)
+      toast.success(`Teacher added. Temporary password: ${result.temporaryPassword}`, { duration: Infinity })
     }
     form.reset({ name: '', email: '', classroomId: '' })
     await queryClient.invalidateQueries({ queryKey: ['teachers'] })
@@ -120,32 +121,38 @@ export function StaffScreen() {
         <QueryState isPending={teachersQuery.isPending} message="Couldn't load staff." onRetry={() => teachersQuery.refetch()} />
       ) : (
         <div className="rounded-xl overflow-hidden" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
-          {teachersQuery.data.map((t, i) => (
-            <div
-              key={t.id}
-              className="flex items-center gap-3 px-5 py-3.5"
-              style={i > 0 ? { borderTop: '1px solid var(--hn-line-2)' } : undefined}
-            >
+          {teachersQuery.data.length === 0 ? (
+            <p className="text-sm p-5" style={{ color: 'var(--hn-sub)' }}>
+              No teacher accounts yet.
+            </p>
+          ) : (
+            teachersQuery.data.map((t, i) => (
               <div
-                className="w-9 h-9 rounded-full flex-none flex items-center justify-center text-sm font-bold text-white"
-                style={{ background: avatarColor(t.id) }}
+                key={t.id}
+                className="flex items-center gap-3 px-5 py-3.5"
+                style={i > 0 ? { borderTop: '1px solid var(--hn-line-2)' } : undefined}
               >
-                {initials(t.name)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold truncate">{t.name}</div>
-                <div className="text-xs truncate" style={{ color: 'var(--hn-sub)' }}>
-                  {t.email}
+                <div
+                  className="w-9 h-9 rounded-full flex-none flex items-center justify-center text-sm font-bold text-white"
+                  style={{ background: avatarColor(t.id) }}
+                >
+                  {initials(t.name)}
                 </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold truncate">{t.name}</div>
+                  <div className="text-xs truncate" style={{ color: 'var(--hn-sub)' }}>
+                    {t.email}
+                  </div>
+                </div>
+                <div className="text-xs w-[200px] truncate" style={{ color: 'var(--hn-sub)' }}>
+                  {t.classroomNames.length > 0 ? t.classroomNames.join(', ') : 'Unassigned'}
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => onDelete(t.id)}>
+                  Remove
+                </Button>
               </div>
-              <div className="text-xs w-[200px] truncate" style={{ color: 'var(--hn-sub)' }}>
-                {t.classroomNames.length > 0 ? t.classroomNames.join(', ') : 'Unassigned'}
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => onDelete(t.id)}>
-                Remove
-              </Button>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       )}
     </PageShell>

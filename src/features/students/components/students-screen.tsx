@@ -139,44 +139,50 @@ export function StudentsScreen() {
         <QueryState isPending={studentsQuery.isPending} message="Couldn't load students." onRetry={() => studentsQuery.refetch()} />
       ) : (
         <div className="rounded-xl overflow-hidden" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
-          {visibleStudents.map((s, i) => {
-            const linking = linkingByStudent.get(s.id)
-            return (
-              <div
-                key={s.id}
-                className="flex items-center gap-3 px-5 py-3.5"
-                style={i > 0 ? { borderTop: '1px solid var(--hn-line-2)' } : undefined}
-              >
+          {visibleStudents.length === 0 ? (
+            <p className="text-sm p-5" style={{ color: 'var(--hn-sub)' }}>
+              {search.trim() ? 'No students match your search.' : 'No students yet.'}
+            </p>
+          ) : (
+            visibleStudents.map((s, i) => {
+              const linking = linkingByStudent.get(s.id)
+              return (
                 <div
-                  className="w-9 h-9 rounded-full flex-none flex items-center justify-center text-sm font-bold text-white"
-                  style={{ background: avatarColor(s.id) }}
+                  key={s.id}
+                  className="flex items-center gap-3 px-5 py-3.5"
+                  style={i > 0 ? { borderTop: '1px solid var(--hn-line-2)' } : undefined}
                 >
-                  {initials(s.name)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold truncate">{s.name}</div>
-                  <div className="text-xs truncate" style={{ color: 'var(--hn-sub)' }}>
-                    {classroomName(s.classroomId)}
+                  <div
+                    className="w-9 h-9 rounded-full flex-none flex items-center justify-center text-sm font-bold text-white"
+                    style={{ background: avatarColor(s.id) }}
+                  >
+                    {initials(s.name)}
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold truncate">{s.name}</div>
+                    <div className="text-xs truncate" style={{ color: 'var(--hn-sub)' }}>
+                      {classroomName(s.classroomId)}
+                    </div>
+                  </div>
+                  {linkingQuery.isPending || linkingQuery.isError ? (
+                    <StatusChip status="checking" />
+                  ) : linking?.linked ? (
+                    <StatusChip status="linked" />
+                  ) : (
+                    <StatusChip status="unlinked" label={linking?.activeCode ? `Unlinked · ${linking.activeCode}` : 'Unlinked'} />
+                  )}
+                  <span className="flex gap-2 flex-none">
+                    <Button variant="outline" size="sm" onClick={() => onGenerateCode(s.id)}>
+                      Generate code
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => onDelete(s.id)}>
+                      Delete
+                    </Button>
+                  </span>
                 </div>
-                {linkingQuery.isPending || linkingQuery.isError ? (
-                  <StatusChip status="checking" />
-                ) : linking?.linked ? (
-                  <StatusChip status="linked" />
-                ) : (
-                  <StatusChip status="unlinked" label={linking?.activeCode ? `Unlinked · ${linking.activeCode}` : 'Unlinked'} />
-                )}
-                <span className="flex gap-2 flex-none">
-                  <Button variant="outline" size="sm" onClick={() => onGenerateCode(s.id)}>
-                    Generate code
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => onDelete(s.id)}>
-                    Delete
-                  </Button>
-                </span>
-              </div>
-            )
-          })}
+              )
+            })
+          )}
         </div>
       )}
     </PageShell>

@@ -73,6 +73,10 @@ export function LinkingCodesScreen() {
             linkingQuery.refetch()
           }}
         />
+      ) : cards.length === 0 ? (
+        <p className="text-sm" style={{ color: 'var(--hn-sub)' }}>
+          No students to show.
+        </p>
       ) : (
         <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
           {cards.map(({ student, linking }) => (

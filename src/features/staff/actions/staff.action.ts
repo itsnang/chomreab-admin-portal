@@ -66,5 +66,6 @@ export async function deleteTeacher(id: string): Promise<{ error?: string }> {
     return { error: e instanceof ApiError ? e.message : 'Failed to remove teacher' }
   }
   revalidatePath('/staff')
+  revalidatePath('/classrooms')
   return {}
 }

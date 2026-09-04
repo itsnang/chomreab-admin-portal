@@ -8,7 +8,10 @@ import { useReportsSummary } from '../hooks/use-reports'
 import type { StudentReportRow } from '../types'
 
 function escapeCsvField(field: string | number | boolean): string {
-  const str = String(field)
+  let str = String(field)
+  if (/^[=+\-@]/.test(str)) {
+    str = `'${str}`
+  }
   if (str.includes(',') || str.includes('"') || str.includes('\n')) {
     return `"${str.replace(/"/g, '""')}"`
   }
@@ -20,13 +23,17 @@ function exportCsv(rows: StudentReportRow[]) {
   const body = rows
     .map((r) => [r.studentName, r.classroomName, r.present, r.late, r.absent, r.ratePct, r.chronic ? 'Yes' : 'No'].map(escapeCsvField).join(','))
     .join('\n')
-  const blob = new Blob([header + body], { type: 'text/csv' })
+  const blob = new Blob(['﻿' + header + body], { type: 'text/csv;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
   a.download = 'attendance-report.csv'
+  document.body.appendChild(a)
   a.click()
-  URL.revokeObjectURL(url)
+  setTimeout(() => {
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }, 0)
 }
 
 export function ReportsScreen() {
@@ -62,23 +69,29 @@ export function ReportsScreen() {
 
           <div className="rounded-xl p-5" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
             <div className="text-base font-extrabold mb-3.5">Today&apos;s summary by class</div>
-            {query.data.dailySummary.map((d, i) => (
-              <div key={d.classroomId} className="flex items-center gap-4 py-2.5" style={i > 0 ? { borderTop: '1px solid var(--hn-line-2)' } : undefined}>
-                <div className="flex-1 text-sm font-bold">{d.classroomName}</div>
-                <div className="font-mono text-[13px] w-[60px]" style={{ color: 'var(--hn-success)' }}>
-                  {d.present} P
+            {query.data.dailySummary.length === 0 ? (
+              <p className="text-sm" style={{ color: 'var(--hn-sub)' }}>
+                No classes yet.
+              </p>
+            ) : (
+              query.data.dailySummary.map((d, i) => (
+                <div key={d.classroomId} className="flex items-center gap-4 py-2.5" style={i > 0 ? { borderTop: '1px solid var(--hn-line-2)' } : undefined}>
+                  <div className="flex-1 text-sm font-bold">{d.classroomName}</div>
+                  <div className="font-mono text-[13px] w-[60px]" style={{ color: 'var(--hn-success)' }}>
+                    {d.present} P
+                  </div>
+                  <div className="font-mono text-[13px] w-[60px]" style={{ color: 'var(--hn-neutral)' }}>
+                    {d.late} L
+                  </div>
+                  <div className="font-mono text-[13px] w-[60px]" style={{ color: 'var(--hn-danger)' }}>
+                    {d.absent} A
+                  </div>
+                  <div className="font-mono text-[13px] w-[90px]" style={{ color: 'var(--hn-sub)' }}>
+                    {d.unmarked} unmarked
+                  </div>
                 </div>
-                <div className="font-mono text-[13px] w-[60px]" style={{ color: 'var(--hn-neutral)' }}>
-                  {d.late} L
-                </div>
-                <div className="font-mono text-[13px] w-[60px]" style={{ color: 'var(--hn-danger)' }}>
-                  {d.absent} A
-                </div>
-                <div className="font-mono text-[13px] w-[90px]" style={{ color: 'var(--hn-sub)' }}>
-                  {d.unmarked} unmarked
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           <div className="rounded-xl overflow-hidden" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
@@ -88,19 +101,25 @@ export function ReportsScreen() {
                 Export CSV
               </Button>
             </div>
-            {query.data.studentRows.map((r, i) => (
-              <div key={r.studentId} className="flex items-center gap-3 px-5 py-3" style={i > 0 ? { borderTop: '1px solid var(--hn-line-2)' } : undefined}>
-                <span className="flex-1 text-sm font-bold truncate">{r.studentName}</span>
-                <span className="text-xs w-[110px]" style={{ color: 'var(--hn-sub)' }}>
-                  {r.classroomName}
-                </span>
-                <span className="font-mono text-[13px] w-[70px]">{r.present}</span>
-                <span className="font-mono text-[13px] w-[60px]">{r.late}</span>
-                <span className="font-mono text-[13px] w-[70px]">{r.absent}</span>
-                <span className="font-mono text-[13px] w-[50px]">{r.ratePct}%</span>
-                <span className="w-[90px] flex justify-end">{r.chronic && <StatusChip status="absent" label="Chronic" bare />}</span>
-              </div>
-            ))}
+            {query.data.studentRows.length === 0 ? (
+              <p className="text-sm p-5" style={{ color: 'var(--hn-sub)' }}>
+                No students yet.
+              </p>
+            ) : (
+              query.data.studentRows.map((r, i) => (
+                <div key={r.studentId} className="flex items-center gap-3 px-5 py-3" style={i > 0 ? { borderTop: '1px solid var(--hn-line-2)' } : undefined}>
+                  <span className="flex-1 text-sm font-bold truncate">{r.studentName}</span>
+                  <span className="text-xs w-[110px]" style={{ color: 'var(--hn-sub)' }}>
+                    {r.classroomName}
+                  </span>
+                  <span className="font-mono text-[13px] w-[70px]">{r.present}</span>
+                  <span className="font-mono text-[13px] w-[60px]">{r.late}</span>
+                  <span className="font-mono text-[13px] w-[70px]">{r.absent}</span>
+                  <span className="font-mono text-[13px] w-[50px]">{r.ratePct}%</span>
+                  <span className="w-[90px] flex justify-end">{r.chronic && <StatusChip status="absent" label="Chronic" bare />}</span>
+                </div>
+              ))
+            )}
           </div>
         </>
       )}
