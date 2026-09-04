@@ -1,1 +1,1 @@
-export { getRoster, markAttendance, bulkMarkAttendance } from './attendance.action'
+export { getRoster, markAttendance, bulkMarkAttendance, getMyClasses, getAuditLog } from './attendance.action'
