@@ -7,10 +7,18 @@ import { Button } from '@/components/ui/button'
 import { useReportsSummary } from '../hooks/use-reports'
 import type { StudentReportRow } from '../types'
 
+function escapeCsvField(field: string | number | boolean): string {
+  const str = String(field)
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`
+  }
+  return str
+}
+
 function exportCsv(rows: StudentReportRow[]) {
   const header = 'Student,Class,Present,Late,Absent,Attendance %,Chronic\n'
   const body = rows
-    .map((r) => [r.studentName, r.classroomName, r.present, r.late, r.absent, r.ratePct, r.chronic ? 'Yes' : 'No'].join(','))
+    .map((r) => [r.studentName, r.classroomName, r.present, r.late, r.absent, r.ratePct, r.chronic ? 'Yes' : 'No'].map(escapeCsvField).join(','))
     .join('\n')
   const blob = new Blob([header + body], { type: 'text/csv' })
   const url = URL.createObjectURL(blob)
