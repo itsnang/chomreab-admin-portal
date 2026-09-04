@@ -35,7 +35,13 @@ export function StaffScreen() {
       toast.error(result.error)
       return
     }
-    toast.success(`Teacher added. Temporary password: ${result.temporaryPassword}`)
+    if (result.classroomAssignmentFailed) {
+      toast.warning(
+        `Teacher added (password: ${result.temporaryPassword}), but classroom assignment failed. Assign from the Classrooms screen.`
+      )
+    } else {
+      toast.success(`Teacher added. Temporary password: ${result.temporaryPassword}`)
+    }
     form.reset({ name: '', email: '', classroomId: '' })
     await queryClient.invalidateQueries({ queryKey: ['teachers'] })
     await queryClient.invalidateQueries({ queryKey: ['classrooms'] })

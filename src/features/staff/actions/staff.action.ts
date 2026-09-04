@@ -28,7 +28,7 @@ interface CreateTeacherApi {
   temporary_password: string
 }
 
-export async function createTeacher(input: TeacherInput): Promise<{ temporaryPassword?: string; error?: string }> {
+export async function createTeacher(input: TeacherInput): Promise<{ temporaryPassword?: string; error?: string; classroomAssignmentFailed?: boolean }> {
   let created: CreateTeacherApi
   try {
     created = await apiFetch<CreateTeacherApi>('/staff', {
@@ -39,21 +39,24 @@ export async function createTeacher(input: TeacherInput): Promise<{ temporaryPas
     return { error: e instanceof ApiError ? e.message : 'Failed to add teacher' }
   }
 
+  let classroomAssignmentFailed = false
   if (input.classroomId) {
     try {
       await apiFetch(`/classrooms/${input.classroomId}`, {
         method: 'PATCH',
         body: JSON.stringify({ teacher_id: created.id }),
       })
-    } catch {
+    } catch (e) {
       // Teacher account was created; the classroom assignment failing isn't
       // fatal — the admin can assign it from the Classrooms screen instead.
+      console.error(`Failed to assign teacher ${created.id} to classroom ${input.classroomId}:`, e)
+      classroomAssignmentFailed = true
     }
   }
 
   revalidatePath('/staff')
   revalidatePath('/classrooms')
-  return { temporaryPassword: created.temporary_password }
+  return { temporaryPassword: created.temporary_password, classroomAssignmentFailed }
 }
 
 export async function deleteTeacher(id: string): Promise<{ error?: string }> {
