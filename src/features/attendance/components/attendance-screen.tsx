@@ -243,10 +243,12 @@ export function AttendanceScreen() {
                 <div className="text-xs font-semibold uppercase tracking-wide mb-2.5" style={{ color: 'var(--hn-sub)' }}>
                   Change log
                 </div>
-                {auditLogQuery.isPending ? (
-                  <p className="text-sm" style={{ color: 'var(--hn-sub)' }}>
-                    Loading…
-                  </p>
+                {auditLogQuery.isPending || auditLogQuery.isError ? (
+                  <QueryState
+                    isPending={auditLogQuery.isPending}
+                    message="Couldn't load the change log."
+                    onRetry={() => auditLogQuery.refetch()}
+                  />
                 ) : auditLogQuery.data && auditLogQuery.data.length > 0 ? (
                   <div className="flex flex-col gap-2">
                     {auditLogQuery.data.map((e, i) => (
