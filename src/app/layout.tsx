@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { plusJakartaSans } from "@/lib/fonts";
+import { plusJakartaSans, ibmPlexMono } from "@/lib/fonts";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -17,7 +17,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${plusJakartaSans.variable} min-h-svh antialiased`}
+      className={`${plusJakartaSans.variable} ${ibmPlexMono.variable} min-h-svh antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>

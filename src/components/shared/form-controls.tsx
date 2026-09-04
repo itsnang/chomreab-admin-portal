@@ -16,7 +16,7 @@ export function Field({
         {children}
       </label>
       {error && (
-        <p className="mt-1 text-[11.5px] font-semibold" style={{ color: 'var(--hn-wish)' }}>
+        <p className="mt-1 text-[11.5px] font-semibold" style={{ color: 'var(--hn-danger)' }}>
           {error}
         </p>
       )}
