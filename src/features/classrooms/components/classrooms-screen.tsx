@@ -10,6 +10,7 @@ import { QueryState } from '@/components/shared/query-state'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { avatarColor, initials } from '@/lib/avatar'
 import { useClassrooms } from '../hooks/use-classrooms'
 import { createClassroom, deleteClassroom } from '../actions'
 import { classroomSchema, type ClassroomInput } from '../schemas'
@@ -48,7 +49,11 @@ export function ClassroomsScreen() {
   return (
     <PageShell heading="Classrooms" description="Create classes and assign teachers.">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2 items-end">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex gap-2 items-end rounded-xl p-4"
+          style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}
+        >
           <FormField
             control={form.control}
             name="name"
@@ -82,24 +87,35 @@ export function ClassroomsScreen() {
       </Form>
 
       {query.isPending || query.isError ? (
-        <QueryState
-          isPending={query.isPending}
-          message="Couldn't load classrooms."
-          onRetry={() => query.refetch()}
-        />
+        <QueryState isPending={query.isPending} message="Couldn't load classrooms." onRetry={() => query.refetch()} />
       ) : (
-        <ul className="divide-y rounded-md border">
-          {query.data.map((c) => (
-            <li key={c.id} className="flex items-center justify-between p-3">
-              <span>
-                {c.name} {c.gradeLabel && <span className="text-muted-foreground">— {c.gradeLabel}</span>}
-              </span>
+        <div className="rounded-xl overflow-hidden" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
+          {query.data.map((c, i) => (
+            <div
+              key={c.id}
+              className="flex items-center gap-3 px-5 py-3.5"
+              style={i > 0 ? { borderTop: '1px solid var(--hn-line-2)' } : undefined}
+            >
+              <div
+                className="w-9 h-9 rounded-full flex-none flex items-center justify-center text-sm font-bold text-white"
+                style={{ background: avatarColor(c.id) }}
+              >
+                {initials(c.name)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold truncate">{c.name}</div>
+                {c.gradeLabel && (
+                  <div className="text-xs" style={{ color: 'var(--hn-sub)' }}>
+                    {c.gradeLabel}
+                  </div>
+                )}
+              </div>
               <Button variant="ghost" size="sm" onClick={() => onDelete(c.id)}>
                 Delete
               </Button>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </PageShell>
   )

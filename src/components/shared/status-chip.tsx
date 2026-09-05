@@ -1,15 +1,4 @@
-type AnyStatus =
-  | 'live'
-  | 'low'
-  | 'hidden'
-  | 'new'
-  | 'pending'
-  | 'preparing'
-  | 'ready'
-  | 'completed'
-  | 'cancelled'
-  | 'active'
-  | 'inactive'
+type AnyStatus = 'present' | 'absent' | 'late' | 'linked' | 'unlinked' | 'checking' | 'active' | 'inactive'
 
 interface ChipStyle {
   label: string
@@ -17,15 +6,12 @@ interface ChipStyle {
 }
 
 const STATUS_STYLES: Record<AnyStatus, ChipStyle> = {
-  new: { label: 'New', color: 'var(--hn-clay)' },
-  pending: { label: 'Pending', color: 'var(--hn-clay)' },
-  preparing: { label: 'Preparing', color: 'var(--hn-cart)' },
-  ready: { label: 'Ready', color: 'var(--hn-success)' },
-  completed: { label: 'Completed', color: 'var(--hn-sub)' },
-  cancelled: { label: 'Cancelled', color: 'var(--hn-wish)' },
-  live: { label: 'Live', color: 'var(--hn-success)' },
-  low: { label: 'Low', color: 'var(--hn-wish)' },
-  hidden: { label: 'Hidden', color: 'var(--hn-sub)' },
+  present: { label: 'Present', color: 'var(--hn-success)' },
+  absent: { label: 'Absent', color: 'var(--hn-danger)' },
+  late: { label: 'Late', color: 'var(--hn-neutral)' },
+  linked: { label: 'Linked', color: 'var(--hn-success)' },
+  unlinked: { label: 'Unlinked', color: 'var(--hn-sub)' },
+  checking: { label: 'Checking…', color: 'var(--hn-sub)' },
   active: { label: 'Active', color: 'var(--hn-success)' },
   inactive: { label: 'Inactive', color: 'var(--hn-sub)' },
 }
@@ -53,9 +39,7 @@ export function StatusChip({ status, label, bare = false }: StatusChipProps) {
         background: `color-mix(in srgb, ${style.color} 14%, transparent)`,
       }}
     >
-      {!bare && (
-        <span className="w-1.5 h-1.5 rounded-full" style={{ background: style.color }} />
-      )}
+      {!bare && <span className="w-1.5 h-1.5 rounded-full" style={{ background: style.color }} />}
       {label ?? style.label}
     </span>
   )
