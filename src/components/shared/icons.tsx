@@ -32,7 +32,7 @@ export const Icons = {
   minus: (props: IconProps) => <Minus {...props} />,
   package: (props: IconProps) => <Package {...props} />,
   phone: (props: IconProps) => (
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor" {...props}>
       <path d="M4 5c0 9 6 15 15 15a2 2 0 0 0 2-2v-2.5a1 1 0 0 0-.8-1l-3.4-.7a1 1 0 0 0-1 .4l-1 1.3a12 12 0 0 1-5-5l1.3-1a1 1 0 0 0 .4-1L10.5 5.8a1 1 0 0 0-1-.8H6a2 2 0 0 0-2 2z" />
     </svg>
   ),

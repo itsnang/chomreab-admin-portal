@@ -3,6 +3,8 @@
 import { PageShell } from '@/components/shared/page-shell'
 import { QueryState } from '@/components/shared/query-state'
 import { StatusChip } from '@/components/shared/status-chip'
+import { StatTile } from '@/components/shared/stat-tile'
+import { Icons } from '@/components/shared/icons'
 import { Button } from '@/components/ui/button'
 import { useReportsSummary } from '../hooks/use-reports'
 import type { StudentReportRow } from '../types'
@@ -47,23 +49,20 @@ export function ReportsScreen() {
         <>
           <div className="flex gap-3">
             <div className="rounded-xl px-5 py-4 min-w-[180px]" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
-              <div className="font-mono text-[28px] font-semibold" style={{ color: 'var(--hn-success)' }}>
-                {query.data.overallRatePct}%
-              </div>
-              <div className="text-xs mt-1" style={{ color: 'var(--hn-sub)' }}>
-                Attendance rate, last 20 days
-              </div>
+              <StatTile
+                icon={Icons.check}
+                color="var(--hn-success)"
+                value={`${query.data.overallRatePct}%`}
+                label="Attendance rate, last 20 days"
+              />
             </div>
             <div className="rounded-xl px-5 py-4 min-w-[180px]" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
-              <div
-                className="font-mono text-[28px] font-semibold"
-                style={{ color: query.data.chronicCount > 0 ? 'var(--hn-danger)' : 'var(--hn-success)' }}
-              >
-                {query.data.chronicCount}
-              </div>
-              <div className="text-xs mt-1" style={{ color: 'var(--hn-sub)' }}>
-                Chronic absentees (3+ in window)
-              </div>
+              <StatTile
+                icon={Icons.user}
+                color={query.data.chronicCount > 0 ? 'var(--hn-danger)' : 'var(--hn-success)'}
+                value={query.data.chronicCount}
+                label="Chronic absentees (3+ in window)"
+              />
             </div>
           </div>
 

@@ -5,6 +5,9 @@ import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { PageShell } from '@/components/shared/page-shell'
 import { QueryState } from '@/components/shared/query-state'
+import { StatTile } from '@/components/shared/stat-tile'
+import { IconRow } from '@/components/shared/icon-row'
+import { Icons } from '@/components/shared/icons'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -202,20 +205,14 @@ export function AttendanceScreen() {
                 <div className="flex mt-5 pt-4" style={{ borderTop: '1px solid var(--hn-line-2)' }}>
                   {(
                     [
-                      { key: 'present', label: 'Present', color: 'var(--hn-success)' },
-                      { key: 'late', label: 'Late', color: 'var(--hn-neutral)' },
-                      { key: 'absent', label: 'Absent', color: 'var(--hn-danger)' },
-                      { key: 'unmarked', label: 'Unmarked', color: 'var(--hn-sub)' },
+                      { key: 'present', label: 'Present', color: 'var(--hn-success)', icon: Icons.check },
+                      { key: 'late', label: 'Late', color: 'var(--hn-neutral)', icon: Icons.clock },
+                      { key: 'absent', label: 'Absent', color: 'var(--hn-danger)', icon: Icons.x },
+                      { key: 'unmarked', label: 'Unmarked', color: 'var(--hn-sub)', icon: Icons.minus },
                     ] as const
                   ).map((stat, i) => (
                     <div key={stat.key} className="flex-1 px-4" style={i > 0 ? { borderLeft: '1px solid var(--hn-line-2)' } : undefined}>
-                      <div className="flex items-center gap-1.5 text-xs font-semibold mb-2" style={{ color: 'var(--hn-sub)' }}>
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: stat.color }} />
-                        {stat.label}
-                      </div>
-                      <div className="font-mono text-[28px] font-semibold" style={{ color: stat.color }}>
-                        {counts[stat.key]}
-                      </div>
+                      <StatTile icon={stat.icon} color={stat.color} value={counts[stat.key]} label={stat.label} />
                     </div>
                   ))}
                 </div>
@@ -260,17 +257,29 @@ export function AttendanceScreen() {
                     onRetry={() => auditLogQuery.refetch()}
                   />
                 ) : auditLogQuery.data && auditLogQuery.data.length > 0 ? (
-                  <div className="flex flex-col gap-2">
-                    {auditLogQuery.data.map((e, i) => (
-                      <div key={i} className="flex gap-3 text-sm">
-                        <span className="font-mono text-xs w-[70px] flex-none" style={{ color: 'var(--hn-sub)' }}>
-                          {new Date(e.changedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                        </span>
-                        <span>
-                          {e.changedByName} changed {e.studentName} from {e.previousStatus} to {e.newStatus}
-                        </span>
-                      </div>
-                    ))}
+                  <div className="flex flex-col gap-3">
+                    {auditLogQuery.data.map((e, i) => {
+                      const { color, icon } = (
+                        {
+                          present: { color: 'var(--hn-success)', icon: Icons.check },
+                          late: { color: 'var(--hn-neutral)', icon: Icons.clock },
+                          absent: { color: 'var(--hn-danger)', icon: Icons.x },
+                        } as const
+                      )[e.newStatus]
+                      return (
+                        <IconRow
+                          key={i}
+                          icon={icon}
+                          color={color}
+                          title={
+                            <>
+                              {e.changedByName} changed {e.studentName} from {e.previousStatus} to {e.newStatus}
+                            </>
+                          }
+                          subtitle={new Date(e.changedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                        />
+                      )
+                    })}
                   </div>
                 ) : (
                   <p className="text-sm" style={{ color: 'var(--hn-sub)' }}>

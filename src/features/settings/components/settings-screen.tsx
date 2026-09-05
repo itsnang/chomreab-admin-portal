@@ -8,6 +8,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { PageShell } from '@/components/shared/page-shell'
 import { QueryState } from '@/components/shared/query-state'
 import { StatusChip } from '@/components/shared/status-chip'
+import { SectionHeader } from '@/components/shared/section-header'
+import { Icons } from '@/components/shared/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -20,6 +22,14 @@ export function SettingsScreen() {
   const queryClient = useQueryClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showToken, setShowToken] = useState(false)
+  const [justSaved, setJustSaved] = useState(false)
+  const [savedTimeoutId, setSavedTimeoutId] = useState<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (savedTimeoutId) clearTimeout(savedTimeoutId)
+    }
+  }, [savedTimeoutId])
 
   const form = useForm<SettingsInput>({
     resolver: zodResolver(settingsSchema),
@@ -48,6 +58,9 @@ export function SettingsScreen() {
     toast.success('Settings saved')
     form.setValue('telegramBotToken', '')
     await queryClient.invalidateQueries({ queryKey: ['school-settings'] })
+    setJustSaved(true)
+    if (savedTimeoutId) clearTimeout(savedTimeoutId)
+    setSavedTimeoutId(setTimeout(() => setJustSaved(false), 1600))
   }
 
   if (query.isPending || query.isError) {
@@ -63,7 +76,7 @@ export function SettingsScreen() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4 max-w-[640px]">
           <div className="rounded-xl p-5" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
-            <div className="text-base font-extrabold mb-3.5">School</div>
+            <SectionHeader icon={Icons.user} title="School" subtitle="Your school's name" />
             <FormField
               control={form.control}
               name="schoolName"
@@ -80,7 +93,7 @@ export function SettingsScreen() {
           </div>
 
           <div className="rounded-xl p-5" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
-            <div className="text-base font-extrabold mb-3.5">Notifications</div>
+            <SectionHeader icon={Icons.clock} title="Notifications" subtitle="Late cutoff & absence messages" />
             <FormField
               control={form.control}
               name="lateCutoffMinutes"
@@ -118,13 +131,17 @@ export function SettingsScreen() {
           </div>
 
           <div className="rounded-xl p-5" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
-            <div className="flex items-center gap-2.5 mb-3.5">
-              <div className="text-base font-extrabold flex-1">Telegram bot</div>
-              <StatusChip
-                status={query.data.telegramBotTokenSet ? 'linked' : 'unlinked'}
-                label={query.data.telegramBotTokenSet ? 'Connected' : 'Not set'}
-              />
-            </div>
+            <SectionHeader
+              icon={Icons.phone}
+              title="Telegram bot"
+              subtitle="Sends attendance notifications to parents"
+              right={
+                <StatusChip
+                  status={query.data.telegramBotTokenSet ? 'linked' : 'unlinked'}
+                  label={query.data.telegramBotTokenSet ? 'Connected' : 'Not set'}
+                />
+              }
+            />
             <FormField
               control={form.control}
               name="telegramBotToken"
@@ -153,11 +170,16 @@ export function SettingsScreen() {
             />
           </div>
 
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting}>
-              Save settings
-            </Button>
-          </div>
+          <Button type="submit" disabled={isSubmitting} variant={justSaved ? 'outline' : 'default'} className="w-full">
+            {justSaved ? (
+              <span className="flex items-center gap-1.5" style={{ color: 'var(--hn-success)' }}>
+                <Icons.check size={16} />
+                Saved
+              </span>
+            ) : (
+              'Save settings'
+            )}
+          </Button>
         </form>
       </Form>
     </PageShell>
