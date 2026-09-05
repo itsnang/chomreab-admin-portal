@@ -72,13 +72,13 @@ export function StudentsScreen() {
   return (
     <PageShell heading="Students" description="Add students and generate parent linking codes.">
       <div className="flex gap-3">
-        <div className="rounded-xl px-5 py-4 min-w-[140px]" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
+        <div className="rounded-[18px] px-5 py-4 min-w-[140px]" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
           <div className="font-mono text-[28px] font-semibold">{studentsQuery.data?.length ?? 0}</div>
           <div className="text-xs mt-1" style={{ color: 'var(--hn-sub)' }}>
             Total students
           </div>
         </div>
-        <div className="rounded-xl px-5 py-4 min-w-[140px]" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
+        <div className="rounded-[18px] px-5 py-4 min-w-[140px]" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
           <div className="font-mono text-[28px] font-semibold" style={{ color: 'var(--hn-success)' }}>
             {linkedCount}
           </div>
@@ -91,7 +91,7 @@ export function StudentsScreen() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="flex gap-2 items-end rounded-xl p-4"
+          className="flex gap-2 items-end rounded-[18px] p-[15px]"
           style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}
         >
           <FormField
@@ -138,7 +138,7 @@ export function StudentsScreen() {
       {studentsQuery.isPending || studentsQuery.isError ? (
         <QueryState isPending={studentsQuery.isPending} message="Couldn't load students." onRetry={() => studentsQuery.refetch()} />
       ) : (
-        <div className="rounded-xl overflow-hidden" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
+        <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
           {visibleStudents.length === 0 ? (
             <p className="text-sm p-5" style={{ color: 'var(--hn-sub)' }}>
               {search.trim() ? 'No students match your search.' : 'No students yet.'}

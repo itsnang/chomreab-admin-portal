@@ -51,7 +51,7 @@ export function ClassroomsScreen() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="flex gap-2 items-end rounded-xl p-4"
+          className="flex gap-2 items-end rounded-[18px] p-[15px]"
           style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}
         >
           <FormField
@@ -89,7 +89,7 @@ export function ClassroomsScreen() {
       {query.isPending || query.isError ? (
         <QueryState isPending={query.isPending} message="Couldn't load classrooms." onRetry={() => query.refetch()} />
       ) : (
-        <div className="rounded-xl overflow-hidden" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
+        <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
           {query.data.map((c, i) => (
             <div
               key={c.id}

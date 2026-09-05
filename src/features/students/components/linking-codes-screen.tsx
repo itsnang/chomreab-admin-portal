@@ -82,7 +82,7 @@ export function LinkingCodesScreen() {
           {cards.map(({ student, linking }) => (
             <div
               key={student.id}
-              className="rounded-xl p-4 flex flex-col gap-3"
+              className="rounded-[18px] p-[15px] flex flex-col gap-3"
               style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}
             >
               <div className="flex items-start gap-2.5">

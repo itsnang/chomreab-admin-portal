@@ -17,24 +17,23 @@ import { useSchoolSettings } from '../hooks/use-settings'
 import { updateSchoolSettings } from '../actions'
 import { settingsSchema, type SettingsInput } from '../schemas'
 
+const FIELD_CLASS = 'rounded-xl h-11 px-3.5'
+const FIELD_STYLE = { background: 'var(--hn-paper)', borderColor: 'var(--hn-line)' } as const
+const CARD_CLASS = 'rounded-[18px] p-[15px]'
+const CARD_STYLE = { background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' } as const
+
 export function SettingsScreen() {
   const query = useSchoolSettings()
   const queryClient = useQueryClient()
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [showToken, setShowToken] = useState(false)
-  const [justSaved, setJustSaved] = useState(false)
-  const [savedTimeoutId, setSavedTimeoutId] = useState<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (savedTimeoutId) clearTimeout(savedTimeoutId)
-    }
-  }, [savedTimeoutId])
 
   const form = useForm<SettingsInput>({
     resolver: zodResolver(settingsSchema),
     defaultValues: { schoolName: '', lateCutoffMinutes: 15, absenceMessageTemplate: '', telegramBotToken: '' },
   })
+  const {
+    formState: { isDirty, isSubmitting },
+  } = form
 
   useEffect(() => {
     if (query.data) {
@@ -48,19 +47,14 @@ export function SettingsScreen() {
   }, [query.data, form])
 
   const onSubmit = async (values: SettingsInput) => {
-    setIsSubmitting(true)
     const result = await updateSchoolSettings(values)
-    setIsSubmitting(false)
     if (result.error) {
       toast.error(result.error)
       return
     }
     toast.success('Settings saved')
-    form.setValue('telegramBotToken', '')
     await queryClient.invalidateQueries({ queryKey: ['school-settings'] })
-    setJustSaved(true)
-    if (savedTimeoutId) clearTimeout(savedTimeoutId)
-    setSavedTimeoutId(setTimeout(() => setJustSaved(false), 1600))
+    form.reset({ ...values, telegramBotToken: '' })
   }
 
   if (query.isPending || query.isError) {
@@ -74,8 +68,8 @@ export function SettingsScreen() {
   return (
     <PageShell heading="Settings" description="School details, notifications, and the Telegram bot.">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4 max-w-[640px]">
-          <div className="rounded-xl p-5" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-3.5 max-w-[640px]">
+          <div className={CARD_CLASS} style={CARD_STYLE}>
             <SectionHeader icon={Icons.user} title="School" subtitle="Your school's name" />
             <FormField
               control={form.control}
@@ -84,7 +78,7 @@ export function SettingsScreen() {
                 <FormItem>
                   <FormLabel>School name</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} className={FIELD_CLASS} style={FIELD_STYLE} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -92,7 +86,7 @@ export function SettingsScreen() {
             />
           </div>
 
-          <div className="rounded-xl p-5" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
+          <div className={CARD_CLASS} style={CARD_STYLE}>
             <SectionHeader icon={Icons.clock} title="Notifications" subtitle="Late cutoff & absence messages" />
             <FormField
               control={form.control}
@@ -101,7 +95,7 @@ export function SettingsScreen() {
                 <FormItem>
                   <FormLabel>Late cutoff (minutes after class start)</FormLabel>
                   <FormControl>
-                    <Input type="number" className="w-[100px]" {...field} />
+                    <Input type="number" className={`${FIELD_CLASS} w-[100px]`} style={FIELD_STYLE} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -117,8 +111,8 @@ export function SettingsScreen() {
                     <textarea
                       {...field}
                       rows={3}
-                      className="w-full rounded-md border px-3 py-2 text-sm resize-none"
-                      style={{ borderColor: 'var(--hn-line)', background: 'var(--hn-surface-2)' }}
+                      className="w-full rounded-xl border px-3.5 py-3 text-sm resize-none"
+                      style={FIELD_STYLE}
                     />
                   </FormControl>
                   <p className="text-xs mt-1" style={{ color: 'var(--hn-sub)' }}>
@@ -130,7 +124,7 @@ export function SettingsScreen() {
             />
           </div>
 
-          <div className="rounded-xl p-5" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
+          <div className={CARD_CLASS} style={CARD_STYLE}>
             <SectionHeader
               icon={Icons.phone}
               title="Telegram bot"
@@ -154,7 +148,8 @@ export function SettingsScreen() {
                         {...field}
                         type={showToken ? 'text' : 'password'}
                         placeholder={query.data.telegramBotTokenSet ? '••••••••••••' : 'Paste a new token'}
-                        className="flex-1 font-mono"
+                        className={`${FIELD_CLASS} flex-1 font-mono`}
+                        style={FIELD_STYLE}
                       />
                     </FormControl>
                     <Button type="button" variant="outline" size="sm" onClick={() => setShowToken((v) => !v)}>
@@ -170,18 +165,28 @@ export function SettingsScreen() {
             />
           </div>
 
-          <Button type="submit" disabled={isSubmitting} variant={justSaved ? 'outline' : 'default'} className="w-full">
-            {justSaved ? (
-              <span className="flex items-center gap-1.5" style={{ color: 'var(--hn-success)' }}>
-                <Icons.check size={16} />
-                Saved
-              </span>
-            ) : (
-              'Save settings'
-            )}
-          </Button>
+          <SaveButton pending={isSubmitting} dirty={isDirty} label="Save settings" />
         </form>
       </Form>
     </PageShell>
+  )
+}
+
+function SaveButton({ pending, dirty, label }: { pending: boolean; dirty: boolean; label: string }) {
+  const active = dirty || pending
+  return (
+    <button
+      type="submit"
+      disabled={pending || !dirty}
+      className="w-full h-11 mt-1 rounded-[13px] text-[14px] font-bold inline-flex items-center justify-center gap-2 border transition-[background-color,border-color,color] disabled:cursor-default"
+      style={
+        active
+          ? { background: 'var(--hn-clay)', borderColor: 'transparent', color: '#fff', opacity: pending ? 0.75 : 1 }
+          : { background: 'transparent', borderColor: 'var(--hn-line)', color: 'var(--hn-success)' }
+      }
+    >
+      {pending ? <Icons.loader2 size={17} className="animate-spin" /> : <Icons.check size={17} />}
+      {pending ? 'Saving…' : dirty ? label : 'Saved'}
+    </button>
   )
 }

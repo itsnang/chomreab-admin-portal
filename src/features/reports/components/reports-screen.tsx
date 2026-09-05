@@ -48,7 +48,7 @@ export function ReportsScreen() {
       ) : (
         <>
           <div className="flex gap-3">
-            <div className="rounded-xl px-5 py-4 min-w-[180px]" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
+            <div className="rounded-[18px] px-5 py-4 min-w-[180px]" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
               <StatTile
                 icon={Icons.check}
                 color="var(--hn-success)"
@@ -56,7 +56,7 @@ export function ReportsScreen() {
                 label="Attendance rate, last 20 days"
               />
             </div>
-            <div className="rounded-xl px-5 py-4 min-w-[180px]" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
+            <div className="rounded-[18px] px-5 py-4 min-w-[180px]" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
               <StatTile
                 icon={Icons.user}
                 color={query.data.chronicCount > 0 ? 'var(--hn-danger)' : 'var(--hn-success)'}
@@ -66,7 +66,7 @@ export function ReportsScreen() {
             </div>
           </div>
 
-          <div className="rounded-xl p-5" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
+          <div className="rounded-[18px] p-[15px]" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
             <div className="text-base font-extrabold mb-3.5">Today&apos;s summary by class</div>
             {query.data.dailySummary.length === 0 ? (
               <p className="text-sm" style={{ color: 'var(--hn-sub)' }}>
@@ -93,7 +93,7 @@ export function ReportsScreen() {
             )}
           </div>
 
-          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
+          <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
             <div className="flex items-center gap-4 px-5 py-4" style={{ borderBottom: '1px solid var(--hn-line)' }}>
               <div className="flex-1 text-lg font-extrabold">Per-student attendance</div>
               <Button variant="outline" size="sm" onClick={() => exportCsv(query.data.studentRows)}>

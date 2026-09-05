@@ -14,18 +14,20 @@ export function SectionHeader({
 }) {
   return (
     <div className="flex items-center gap-2.5 mb-3.5">
-      <div
-        className="w-9 h-9 rounded-lg flex-none flex items-center justify-center"
-        style={{ background: 'color-mix(in srgb, var(--hn-clay) 14%, transparent)' }}
+      <span
+        className="grid place-items-center w-8 h-8 rounded-[10px] shrink-0"
+        style={{ background: 'color-mix(in srgb, var(--hn-clay) 10%, transparent)', color: 'var(--hn-clay)' }}
       >
-        {icon({ size: 16, style: { color: 'var(--hn-clay)' } })}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-base font-extrabold">{title}</div>
+        {icon({ size: 16, strokeWidth: 2.2 })}
+      </span>
+      <div className="min-w-0 flex-1">
+        <h2 className="text-[13.5px] font-bold leading-tight" style={{ color: 'var(--hn-ink)' }}>
+          {title}
+        </h2>
         {subtitle && (
-          <div className="text-xs truncate" style={{ color: 'var(--hn-sub)' }}>
+          <p className="text-[11.5px] font-medium mt-0.5 truncate" style={{ color: 'var(--hn-sub)' }}>
             {subtitle}
-          </div>
+          </p>
         )}
       </div>
       {right}

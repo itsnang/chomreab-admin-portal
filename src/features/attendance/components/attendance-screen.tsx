@@ -106,8 +106,8 @@ export function AttendanceScreen() {
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: '260px minmax(0,1fr)' }}>
           <div
-            className="rounded-xl p-4 h-fit"
-            style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)', boxShadow: 'var(--hn-elev-sm)' }}
+            className="rounded-[18px] p-4 h-fit"
+            style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}
           >
             <div className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--hn-sub)' }}>
               My classes today
@@ -164,8 +164,8 @@ export function AttendanceScreen() {
           ) : (
             <div className="flex flex-col gap-4 min-w-0">
               <div
-                className="rounded-xl p-6"
-                style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)', boxShadow: 'var(--hn-elev)' }}
+                className="rounded-[18px] p-6"
+                style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}
               >
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div>
@@ -219,8 +219,8 @@ export function AttendanceScreen() {
               </div>
 
               <div
-                className="rounded-xl overflow-hidden"
-                style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)', boxShadow: 'var(--hn-elev)' }}
+                className="rounded-[18px] overflow-hidden"
+                style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}
               >
                 {roster.length === 0 ? (
                   <p className="text-sm p-5" style={{ color: 'var(--hn-sub)' }}>
@@ -244,8 +244,8 @@ export function AttendanceScreen() {
               </div>
 
               <div
-                className="rounded-xl p-5"
-                style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)', boxShadow: 'var(--hn-elev)' }}
+                className="rounded-[18px] p-[15px]"
+                style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}
               >
                 <div className="text-xs font-semibold uppercase tracking-wide mb-2.5" style={{ color: 'var(--hn-sub)' }}>
                   Change log
