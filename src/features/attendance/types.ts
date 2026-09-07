@@ -19,8 +19,7 @@ export interface AuditLogEntry {
   changedAt: string
   studentName: string
   changedByName: string
-  /** Empty string on the first mark of the day — there was no previous status. */
-  previousStatus: AttendanceStatus | ''
+  previousStatus: AttendanceStatus
   newStatus: AttendanceStatus
 }
 

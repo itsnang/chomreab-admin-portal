@@ -47,8 +47,7 @@ export function ChangeLog({ classroomId, date }: ChangeLogProps) {
                 title={
                   <>
                     {entry.changedByName} changed {entry.studentName} from{' '}
-                    {entry.previousStatus ? statusLabel(entry.previousStatus) : 'unmarked'} to{' '}
-                    {statusLabel(entry.newStatus)}
+                    {statusLabel(entry.previousStatus)} to {statusLabel(entry.newStatus)}
                   </>
                 }
                 subtitle={new Date(entry.changedAt).toLocaleTimeString([], {
