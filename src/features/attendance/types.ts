@@ -19,6 +19,15 @@ export interface AuditLogEntry {
   changedAt: string
   studentName: string
   changedByName: string
-  previousStatus: AttendanceStatus
+  /** Empty string on the first mark of the day — there was no previous status. */
+  previousStatus: AttendanceStatus | ''
   newStatus: AttendanceStatus
+}
+
+/** A mark the teacher has changed but not yet saved. Nothing reaches a parent
+ *  until these are committed by `saveRoster`. */
+export interface StagedMark {
+  studentId: string
+  status: AttendanceStatus
+  note: string | null
 }

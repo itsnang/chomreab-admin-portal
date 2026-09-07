@@ -6,6 +6,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { PageShell } from '@/components/shared/page-shell'
 import { QueryState } from '@/components/shared/query-state'
 import { StatusChip } from '@/components/shared/status-chip'
+import { EmptyState } from '@/components/shared/empty-state'
+import { Icons } from '@/components/shared/icons'
 import { Button } from '@/components/ui/button'
 import { useClassrooms } from '@/features/classrooms/hooks/use-classrooms'
 import { useStudents, useLinkingStatus } from '../hooks/use-students'
@@ -74,36 +76,42 @@ export function LinkingCodesScreen() {
           }}
         />
       ) : cards.length === 0 ? (
-        <p className="text-sm" style={{ color: 'var(--hn-sub)' }}>
-          No students to show.
-        </p>
+        <div className="rounded-xl border bg-card shadow-card-sm">
+          <EmptyState
+            icon={<Icons.qrCode />}
+            title={unlinkedOnly ? 'Every parent is linked' : 'No students to show'}
+            description={
+              unlinkedOnly
+                ? 'Nobody is waiting for a code right now.'
+                : 'Add students before generating linking codes.'
+            }
+          />
+        </div>
       ) : (
-        <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
+        <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
           {cards.map(({ student, linking }) => (
             <div
               key={student.id}
-              className="rounded-[18px] p-[15px] flex flex-col gap-3"
-              style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}
+              className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-card-sm"
             >
               <div className="flex items-start gap-2.5">
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-bold truncate">{student.name}</div>
-                  <div className="text-xs mt-0.5" style={{ color: 'var(--hn-sub)' }}>
+                  <div className="mt-0.5 text-xs text-muted-foreground">
                     {classroomName(student.classroomId)}
                   </div>
                 </div>
                 <StatusChip status={linking?.linked ? 'linked' : 'unlinked'} bare />
               </div>
               {linking?.activeCode ? (
-                <div
-                  className="rounded-xl py-3 text-center font-mono text-[22px] font-semibold tracking-[0.12em]"
-                  style={{ background: 'var(--hn-surface-2)', border: '1px dashed var(--hn-line)' }}
-                >
+                <div className="rounded-lg border border-dashed bg-muted/50 py-3 text-center font-mono text-[22px] font-semibold tracking-[0.12em]">
                   {linking.activeCode}
                 </div>
               ) : (
-                <div className="text-xs" style={{ color: 'var(--hn-sub)' }}>
-                  {linking?.linked ? 'Already linked — generate a new code to re-link elsewhere.' : 'No active code.'}
+                <div className="text-xs text-muted-foreground">
+                  {linking?.linked
+                    ? 'Already linked — generate a new code to re-link elsewhere.'
+                    : 'No active code.'}
                 </div>
               )}
               <div className="flex gap-2">

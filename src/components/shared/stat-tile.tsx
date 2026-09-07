@@ -1,29 +1,31 @@
 import type React from 'react'
+import { cn } from '@/lib/utils'
+import { TONE_MUTED_BG, TONE_TEXT, type Tone } from './tone'
 import type { IconProps } from './icons'
 
-export function StatTile({
-  icon,
-  color,
-  value,
-  label,
-}: {
+interface StatTileProps {
   icon: (props: IconProps) => React.ReactNode
-  color: string
+  /** Names a semantic role rather than a colour, so the palette stays in one
+   *  place and a tile can't drift off the scale. */
+  tone: Tone
   value: React.ReactNode
   label: string
-}) {
+}
+
+export function StatTile({ icon, tone, value, label }: StatTileProps) {
   return (
     <div>
       <div
-        className="w-9 h-9 rounded-lg flex items-center justify-center mb-2"
-        style={{ background: `color-mix(in srgb, ${color} 14%, transparent)` }}
+        className={cn(
+          'mb-2 flex size-9 items-center justify-center rounded-lg',
+          TONE_MUTED_BG[tone],
+          TONE_TEXT[tone]
+        )}
       >
-        {icon({ size: 16, style: { color } })}
+        {icon({ size: 16 })}
       </div>
-      <div className="font-mono text-[28px] font-semibold" style={{ color }}>
-        {value}
-      </div>
-      <div className="flex items-center gap-1.5 text-xs font-semibold mt-1" style={{ color: 'var(--hn-sub)' }}>
+      <div className={cn('font-mono text-[28px] font-semibold', TONE_TEXT[tone])}>{value}</div>
+      <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
         {label}
       </div>
     </div>

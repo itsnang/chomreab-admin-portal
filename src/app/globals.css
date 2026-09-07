@@ -25,6 +25,21 @@
     --input: 60 7.4% 89.4%;
     --ring: 210 100% 40%;
     --radius: 0.6875rem;
+
+    /* Attendance signals. The paired `-muted` tone backs the selected state of
+       a segmented control and the count tiles. */
+    --present: 145 46.4% 33.1%;
+    --present-muted: 140 30.4% 91%;
+    --late: 40 58.5% 50.6%;
+    --late-muted: 42 60% 92.2%;
+    --absent: 2 45.5% 45.3%;
+    --absent-muted: 6 60% 92.2%;
+    --unmarked: 60 0.8% 47.5%;
+    --unmarked-muted: 60 9.5% 91.8%;
+
+    --shadow-card: 0 1px 2px rgb(16 16 16 / 0.03), 0 10px 24px rgb(16 16 16 / 0.05);
+    --shadow-card-sm: 0 1px 2px rgb(16 16 16 / 0.03), 0 6px 16px rgb(16 16 16 / 0.04);
+    --shadow-primary: 0 4px 12px rgb(0 102 204 / 0.26);
   }
 
   .dark {
@@ -47,6 +62,19 @@
     --border: 60 2.2% 17.6%;
     --input: 60 2.2% 17.6%;
     --ring: 209 72.7% 55.5%;
+
+    --present: 145 39% 49%;
+    --present-muted: 145 22% 15%;
+    --late: 40 55% 60%;
+    --late-muted: 42 22% 15%;
+    --absent: 3 54.5% 62.9%;
+    --absent-muted: 6 24% 15%;
+    --unmarked: 60 1.5% 59.8%;
+    --unmarked-muted: 0 0% 14.1%;
+
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 28px rgb(0 0 0 / 0.5);
+    --shadow-card-sm: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 14px rgb(0 0 0 / 0.4);
+    --shadow-primary: 0 4px 14px rgb(59 143 224 / 0.32);
   }
 
   * {
@@ -54,11 +82,9 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
   }
   html {
     @apply font-sans;
-    font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
     font-size: 16px;
   }
 }
@@ -86,72 +112,30 @@
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --color-hn-paper: var(--hn-paper);
-  --color-hn-surface: var(--hn-surface);
-  --color-hn-surface-2: var(--hn-surface-2);
-  --color-hn-ink: var(--hn-ink);
-  --color-hn-ink-soft: var(--hn-ink-soft);
-  --color-hn-sub: var(--hn-sub);
-  --color-hn-line: var(--hn-line);
-  --color-hn-line-2: var(--hn-line-2);
-  --color-hn-hair: var(--hn-hair);
-  --color-hn-clay: var(--hn-clay);
-  --color-hn-success: var(--hn-success);
-  --color-hn-danger: var(--hn-danger);
-  --color-hn-neutral: var(--hn-neutral);
+  --radius-xl: calc(var(--radius) * 1.6);
+
+  --color-present: hsl(var(--present));
+  --color-present-muted: hsl(var(--present-muted));
+  --color-late: hsl(var(--late));
+  --color-late-muted: hsl(var(--late-muted));
+  --color-absent: hsl(var(--absent));
+  --color-absent-muted: hsl(var(--absent-muted));
+  --color-unmarked: hsl(var(--unmarked));
+  --color-unmarked-muted: hsl(var(--unmarked-muted));
+
+  --shadow-card: var(--shadow-card);
+  --shadow-card-sm: var(--shadow-card-sm);
+  --shadow-primary: var(--shadow-primary);
   --font-sans: var(--font-plus-jakarta-sans), system-ui, sans-serif;
   --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
 }
 
-/* Rollcall tokens — outside @layer so unlayered rules apply correctly */
-:root {
-  --hn-paper: #F7F7F5;
-  --hn-surface: #FFFFFF;
-  --hn-surface-2: #F7F7F5;
-  --hn-ink: #101010;
-  --hn-ink-soft: #404040;
-  --hn-sub: #7A7A78;
-  --hn-line: #E6E6E2;
-  --hn-line-2: #ECECE8;
-  --hn-hair: #ECECE8;
-  --hn-clay: #0066CC;
-  --hn-success: #2E7D4F;
-  --hn-danger: #A8433F;
-  --hn-neutral: #5B5955;
-  --hn-elev: 0 1px 2px rgba(16,16,16,.03), 0 10px 24px rgba(16,16,16,.05);
-  --hn-elev-sm: 0 1px 2px rgba(16,16,16,.03), 0 6px 16px rgba(16,16,16,.04);
-  --hn-clay-shadow: 0 4px 12px rgba(0,102,204,.26);
-  --hn-drawer-shadow: 0 -12px 40px -8px rgba(16,16,16,.14);
-  --hn-nav-clearance: 6rem;
-}
-
-.dark {
-  --hn-paper: #121212;
-  --hn-surface: #1A1A1A;
-  --hn-surface-2: #1F1F1F;
-  --hn-ink: #F2F2F0;
-  --hn-ink-soft: #C9C9C7;
-  --hn-sub: #9A9A97;
-  --hn-line: #2E2E2C;
-  --hn-line-2: #242424;
-  --hn-hair: #242424;
-  --hn-clay: #3B8FE0;
-  --hn-success: #4CAE7A;
-  --hn-danger: #D4726D;
-  --hn-neutral: #9C9994;
-  --hn-elev: 0 1px 2px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.5);
-  --hn-elev-sm: 0 1px 2px rgba(0,0,0,.3), 0 6px 14px rgba(0,0,0,.4);
-  --hn-clay-shadow: 0 4px 14px rgba(59,143,224,.32);
-  --hn-drawer-shadow: 0 -12px 40px -8px rgba(0,0,0,.4);
-}
-
 /* NProgress bar — themed to match app design */
 #nprogress .bar {
-  background: var(--hn-clay) !important;
+  background: hsl(var(--primary)) !important;
   height: 2px !important;
   z-index: 9999 !important;
 }
 #nprogress .peg {
-  box-shadow: 0 0 8px var(--hn-clay), 0 0 4px var(--hn-clay) !important;
+  box-shadow: 0 0 8px hsl(var(--primary)), 0 0 4px hsl(var(--primary)) !important;
 }

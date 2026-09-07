@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { getCurrentUser, logout } from '@/features/auth/actions'
 import { DashboardNav } from '@/components/shared/dashboard-nav'
 import { Icons } from '@/components/shared/icons'
-import { avatarColor, initials } from '@/lib/avatar'
+import { InitialAvatar } from '@/components/shared/initial-avatar'
 
 const ADMIN_NAV = [
   { href: '/classrooms', label: 'Classrooms', icon: 'building2' },
@@ -24,14 +24,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const nav = user.role === 'admin' ? ADMIN_NAV : TEACHER_NAV
 
   return (
-    <div className="min-h-svh flex" style={{ background: 'var(--hn-paper)' }}>
-      <aside
-        className="flex flex-col items-center py-5 gap-2 sticky top-0 h-svh flex-none"
-        style={{ width: 88, background: 'var(--hn-surface)', borderRight: '1px solid var(--hn-hair)' }}
-      >
+    <div className="flex min-h-svh bg-background">
+      <aside className="sticky top-0 flex h-svh w-22 flex-none flex-col items-center gap-2 border-r bg-card py-5">
         <div
-          className="w-[38px] h-[38px] rounded-[11px] grid place-items-center text-white font-extrabold text-[17px] mb-3.5 flex-none"
-          style={{ background: 'var(--hn-clay)' }}
+          className="mb-3.5 grid size-[38px] flex-none place-items-center rounded-lg bg-primary text-[17px] font-extrabold text-primary-foreground"
           aria-hidden="true"
           title="Rollcall"
         >
@@ -43,19 +39,17 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         <div className="flex-1" />
 
         <div className="flex flex-col items-center gap-2">
-          <div
-            className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-none"
-            style={{ background: avatarColor(user.id) }}
+          <InitialAvatar
+            id={user.id}
+            name={user.name}
+            className="text-xs"
             title={`${user.name} (${user.role})`}
-          >
-            {initials(user.name)}
-          </div>
+          />
           <form action={logout}>
             <button
               type="submit"
               title="Sign out"
-              className="w-9 h-9 rounded-[11px] flex items-center justify-center transition-colors"
-              style={{ color: 'var(--hn-sub)' }}
+              className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <Icons.logOut size={18} />
             </button>

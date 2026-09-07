@@ -7,15 +7,9 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { login } from '../actions'
 import { loginSchema, type LoginInput } from '../types'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 export function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false)
@@ -35,62 +29,31 @@ export function LoginScreen() {
   }
 
   return (
-    <div className="h-svh flex flex-col items-center justify-center px-4">
-      {/* Brand mark */}
-      <div className="flex items-center gap-2 mb-8">
+    <div className="flex min-h-svh flex-col items-center justify-center px-4 py-10">
+      <div className="mb-8 flex items-center gap-2.5">
         <div
-          className="w-7 h-7 rounded-lg flex items-center justify-center"
-          style={{ background: 'var(--hn-clay)' }}
+          className="grid size-8 flex-none place-items-center rounded-lg bg-primary text-base font-extrabold text-primary-foreground"
           aria-hidden="true"
         >
-          <span
-            className="text-white text-sm leading-none"
-            style={{ fontWeight: 400 }}
-          >
-            H
-          </span>
+          R
         </div>
-        <span
-          className="text-[17px]"
-          style={{ color: 'var(--hn-ink)' }}
-        >
-          Attendance
-        </span>
+        <span className="text-[17px] font-bold">Rollcall</span>
       </div>
 
-      {/* Card */}
-      <div
-        className="w-full max-w-sm rounded-[24px] px-7 py-8"
-        style={{
-          background: 'var(--hn-surface-2)',
-          boxShadow: 'var(--hn-elev)',
-        }}
-      >
-        <h1
-          className="text-[28px] leading-tight mb-1"
-          style={{ color: 'var(--hn-ink)' }}
-        >
-          Welcome back
-        </h1>
-        <p
-          className="text-[13px] mb-7"
-          style={{ color: 'var(--hn-sub)' }}
-        >
+      <div className="w-full max-w-sm rounded-xl border bg-card px-7 py-8 shadow-card">
+        <h1 className="text-2xl font-extrabold tracking-tight">Welcome back</h1>
+        <p className="mt-1 mb-7 text-[13px] text-muted-foreground">
           Sign in with your admin or teacher account
         </p>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            {/* Email */}
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel
-                    className="text-[12px] font-semibold tracking-[0.06em] uppercase"
-                    style={{ color: 'var(--hn-sub)' }}
-                  >
+                  <FormLabel className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
                     Email
                   </FormLabel>
                   <FormControl>
@@ -98,11 +61,7 @@ export function LoginScreen() {
                       type="email"
                       placeholder="you@example.com"
                       autoComplete="email"
-                      className="h-11 rounded-[10px] text-sm"
-                      style={{
-                        borderColor: 'var(--hn-line)',
-                        color: 'var(--hn-ink)',
-                      }}
+                      className="h-11"
                       {...field}
                     />
                   </FormControl>
@@ -111,16 +70,12 @@ export function LoginScreen() {
               )}
             />
 
-            {/* Password */}
             <FormField
               control={form.control}
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel
-                    className="text-[12px] font-semibold tracking-[0.06em] uppercase"
-                    style={{ color: 'var(--hn-sub)' }}
-                  >
+                  <FormLabel className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
                     Password
                   </FormLabel>
                   <FormControl>
@@ -129,19 +84,14 @@ export function LoginScreen() {
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         autoComplete="current-password"
-                        className="h-11 rounded-[10px] text-sm pr-10"
-                        style={{
-                          borderColor: 'var(--hn-line)',
-                          color: 'var(--hn-ink)',
-                        }}
+                        className="h-11 pr-10"
                         {...field}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword((v) => !v)}
                         aria-label={showPassword ? 'Hide password' : 'Show password'}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
-                        style={{ color: 'var(--hn-sub)' }}
+                        className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-opacity hover:opacity-70"
                       >
                         {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>
@@ -152,25 +102,16 @@ export function LoginScreen() {
               )}
             />
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full h-12 rounded-[14px] text-sm font-semibold tracking-[0.04em] transition-opacity hover:opacity-90 disabled:opacity-60 mt-2 flex items-center justify-center gap-2"
-              style={{ background: 'var(--hn-ink)', color: 'var(--hn-paper)' }}
-            >
-              {isSubmitting && <Loader2 size={15} className="animate-spin" />}
+            <Button type="submit" size="lg" disabled={isSubmitting} className="mt-2 h-12 w-full">
+              {isSubmitting && <Loader2 className="animate-spin" />}
               Sign in
-            </button>
+            </Button>
           </form>
         </Form>
       </div>
 
-      {/* No self-service sign up — admin creates teacher accounts. */}
-      <p
-        className="text-[13px] mt-6"
-        style={{ color: 'var(--hn-sub)' }}
-      >
+      {/* No self-service sign up — admins create teacher accounts. */}
+      <p className="mt-6 text-[13px] text-muted-foreground">
         Accounts are created by your school admin.
       </p>
     </div>

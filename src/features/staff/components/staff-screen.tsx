@@ -7,10 +7,15 @@ import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { PageShell } from '@/components/shared/page-shell'
 import { QueryState } from '@/components/shared/query-state'
+import { EmptyState } from '@/components/shared/empty-state'
+import { ConfirmButton } from '@/components/shared/confirm-button'
+import { FormDialog } from '@/components/shared/form-dialog'
+import { Icons } from '@/components/shared/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { avatarColor, initials } from '@/lib/avatar'
+import { InitialAvatar } from '@/components/shared/initial-avatar'
+import { cn } from '@/lib/utils'
 import { useClassrooms } from '@/features/classrooms/hooks/use-classrooms'
 import { useTeachers } from '../hooks/use-staff'
 import { createTeacher, deleteTeacher } from '../actions'
@@ -20,7 +25,7 @@ export function StaffScreen() {
   const classroomsQuery = useClassrooms()
   const teachersQuery = useTeachers()
   const queryClient = useQueryClient()
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [addOpen, setAddOpen] = useState(false)
 
   const form = useForm<TeacherInput>({
     resolver: zodResolver(teacherSchema),
@@ -28,9 +33,7 @@ export function StaffScreen() {
   })
 
   const onSubmit = async (values: TeacherInput) => {
-    setIsSubmitting(true)
     const result = await createTeacher(values)
-    setIsSubmitting(false)
     if (result.error) {
       toast.error(result.error)
       return
@@ -44,112 +47,136 @@ export function StaffScreen() {
       toast.success(`Teacher added. Temporary password: ${result.temporaryPassword}`, { duration: Infinity })
     }
     form.reset({ name: '', email: '', classroomId: '' })
+    setAddOpen(false)
     await queryClient.invalidateQueries({ queryKey: ['teachers'] })
     await queryClient.invalidateQueries({ queryKey: ['classrooms'] })
   }
 
-  const onDelete = async (id: string) => {
+  const onDelete = async (id: string, name: string) => {
     const result = await deleteTeacher(id)
     if (result.error) {
       toast.error(result.error)
       return
     }
+    toast.success(`${name} removed.`)
     await queryClient.invalidateQueries({ queryKey: ['teachers'] })
   }
 
   return (
-    <PageShell heading="Staff" description="Add teacher accounts and see what each one teaches.">
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex gap-2 items-end flex-wrap rounded-[18px] p-[15px]"
-          style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}
-        >
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Chenda Ly" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="chenda@school.edu" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="classroomId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Classroom</FormLabel>
-                <FormControl>
-                  <select className="h-9 rounded-md border bg-background px-3 text-sm" {...field}>
-                    <option value="">Unassigned</option>
-                    {classroomsQuery.data?.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit" disabled={isSubmitting}>
-            Add teacher
-          </Button>
-        </form>
-      </Form>
+    <PageShell
+      heading="Staff"
+      description="Add teacher accounts and see what each one teaches."
+      actions={
+        <Form {...form}>
+          <FormDialog
+            open={addOpen}
+            onOpenChange={setAddOpen}
+            trigger={
+              <Button>
+                <Icons.plus />
+                Add teacher
+              </Button>
+            }
+            title="Add a teacher"
+            description="They sign in with the temporary password shown after you save."
+            submitLabel="Add teacher"
+            isSubmitting={form.formState.isSubmitting}
+            onSubmit={form.handleSubmit(onSubmit)}
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Chenda Ly" autoComplete="off" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="chenda@school.edu" autoComplete="off" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="classroomId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Classroom</FormLabel>
+                  <FormControl>
+                    <select
+                      className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                      {...field}
+                    >
+                      <option value="">Unassigned</option>
+                      {classroomsQuery.data?.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </FormDialog>
+        </Form>
+      }
+    >
 
       {teachersQuery.isPending || teachersQuery.isError ? (
-        <QueryState isPending={teachersQuery.isPending} message="Couldn't load staff." onRetry={() => teachersQuery.refetch()} />
+        <QueryState
+          isPending={teachersQuery.isPending}
+          message="Couldn't load staff."
+          onRetry={() => teachersQuery.refetch()}
+          className="py-14"
+        />
       ) : (
-        <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
+        <div className="overflow-hidden rounded-xl border bg-card shadow-card-sm">
           {teachersQuery.data.length === 0 ? (
-            <p className="text-sm p-5" style={{ color: 'var(--hn-sub)' }}>
-              No teacher accounts yet.
-            </p>
+            <EmptyState
+              icon={<Icons.users />}
+              title="No teacher accounts yet"
+              description="Add a teacher so they can sign in and mark their classes."
+              action={<Button onClick={() => setAddOpen(true)}>Add a teacher</Button>}
+            />
           ) : (
             teachersQuery.data.map((t, i) => (
               <div
                 key={t.id}
-                className="flex items-center gap-3 px-5 py-3.5"
-                style={i > 0 ? { borderTop: '1px solid var(--hn-line-2)' } : undefined}
+                className={cn('flex items-center gap-3 px-5 py-3.5', i > 0 && 'border-t')}
               >
-                <div
-                  className="w-9 h-9 rounded-full flex-none flex items-center justify-center text-sm font-bold text-white"
-                  style={{ background: avatarColor(t.id) }}
-                >
-                  {initials(t.name)}
+                <InitialAvatar id={t.id} name={t.name} />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-bold">{t.name}</div>
+                  <div className="truncate text-xs text-muted-foreground">{t.email}</div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold truncate">{t.name}</div>
-                  <div className="text-xs truncate" style={{ color: 'var(--hn-sub)' }}>
-                    {t.email}
-                  </div>
-                </div>
-                <div className="text-xs w-[200px] truncate" style={{ color: 'var(--hn-sub)' }}>
+                <div className="w-[200px] truncate text-xs text-muted-foreground">
                   {t.classroomNames.length > 0 ? t.classroomNames.join(', ') : 'Unassigned'}
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => onDelete(t.id)}>
+                <ConfirmButton
+                  destructive
+                  title={`Remove ${t.name}?`}
+                  description="Their account is deleted and they lose access immediately. Attendance they recorded is kept."
+                  confirmLabel="Remove teacher"
+                  onConfirm={() => void onDelete(t.id, t.name)}
+                >
+                  <Icons.trash2 />
                   Remove
-                </Button>
+                </ConfirmButton>
               </div>
             ))
           )}

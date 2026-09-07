@@ -13,14 +13,13 @@ import { Icons } from '@/components/shared/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { cn } from '@/lib/utils'
 import { useSchoolSettings } from '../hooks/use-settings'
 import { updateSchoolSettings } from '../actions'
 import { settingsSchema, type SettingsInput } from '../schemas'
 
-const FIELD_CLASS = 'rounded-xl h-11 px-3.5'
-const FIELD_STYLE = { background: 'var(--hn-paper)', borderColor: 'var(--hn-line)' } as const
-const CARD_CLASS = 'rounded-[18px] p-[15px]'
-const CARD_STYLE = { background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' } as const
+const FIELD_CLASS = 'h-11 rounded-lg bg-background px-3.5'
+const CARD_CLASS = 'rounded-xl border bg-card p-4 shadow-card-sm'
 
 export function SettingsScreen() {
   const query = useSchoolSettings()
@@ -69,7 +68,7 @@ export function SettingsScreen() {
     <PageShell heading="Settings" description="School details, notifications, and the Telegram bot.">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-3.5 max-w-[640px]">
-          <div className={CARD_CLASS} style={CARD_STYLE}>
+          <div className={CARD_CLASS}>
             <SectionHeader icon={Icons.user} title="School" subtitle="Your school's name" />
             <FormField
               control={form.control}
@@ -78,7 +77,7 @@ export function SettingsScreen() {
                 <FormItem>
                   <FormLabel>School name</FormLabel>
                   <FormControl>
-                    <Input {...field} className={FIELD_CLASS} style={FIELD_STYLE} />
+                    <Input {...field} className={FIELD_CLASS} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -86,7 +85,7 @@ export function SettingsScreen() {
             />
           </div>
 
-          <div className={CARD_CLASS} style={CARD_STYLE}>
+          <div className={CARD_CLASS}>
             <SectionHeader icon={Icons.clock} title="Notifications" subtitle="Late cutoff & absence messages" />
             <FormField
               control={form.control}
@@ -95,7 +94,7 @@ export function SettingsScreen() {
                 <FormItem>
                   <FormLabel>Late cutoff (minutes after class start)</FormLabel>
                   <FormControl>
-                    <Input type="number" className={`${FIELD_CLASS} w-[100px]`} style={FIELD_STYLE} {...field} />
+                    <Input type="number" className={`${FIELD_CLASS} w-[100px]`} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -111,11 +110,10 @@ export function SettingsScreen() {
                     <textarea
                       {...field}
                       rows={3}
-                      className="w-full rounded-xl border px-3.5 py-3 text-sm resize-none"
-                      style={FIELD_STYLE}
+                      className="w-full resize-none rounded-lg border bg-background px-3.5 py-3 text-sm"
                     />
                   </FormControl>
-                  <p className="text-xs mt-1" style={{ color: 'var(--hn-sub)' }}>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Use <code>{'{{student_name}}'}</code> to insert the student&apos;s name.
                   </p>
                   <FormMessage />
@@ -124,9 +122,9 @@ export function SettingsScreen() {
             />
           </div>
 
-          <div className={CARD_CLASS} style={CARD_STYLE}>
+          <div className={CARD_CLASS}>
             <SectionHeader
-              icon={Icons.phone}
+              icon={Icons.send}
               title="Telegram bot"
               subtitle="Sends attendance notifications to parents"
               right={
@@ -149,14 +147,13 @@ export function SettingsScreen() {
                         type={showToken ? 'text' : 'password'}
                         placeholder={query.data.telegramBotTokenSet ? '••••••••••••' : 'Paste a new token'}
                         className={`${FIELD_CLASS} flex-1 font-mono`}
-                        style={FIELD_STYLE}
                       />
                     </FormControl>
                     <Button type="button" variant="outline" size="sm" onClick={() => setShowToken((v) => !v)}>
                       {showToken ? 'Hide' : 'Show'}
                     </Button>
                   </div>
-                  <p className="text-xs mt-1" style={{ color: 'var(--hn-sub)' }}>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Leave blank to keep the current token.
                   </p>
                   <FormMessage />
@@ -172,18 +169,21 @@ export function SettingsScreen() {
   )
 }
 
+/** Reads as a status as much as a control: clay while there is something to
+ *  save, a quiet "Saved" outline once the form is clean again. */
 function SaveButton({ pending, dirty, label }: { pending: boolean; dirty: boolean; label: string }) {
   const active = dirty || pending
   return (
     <button
       type="submit"
       disabled={pending || !dirty}
-      className="w-full h-11 mt-1 rounded-[13px] text-[14px] font-bold inline-flex items-center justify-center gap-2 border transition-[background-color,border-color,color] disabled:cursor-default"
-      style={
+      className={cn(
+        'mt-1 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border text-sm font-bold transition-colors disabled:cursor-default',
         active
-          ? { background: 'var(--hn-clay)', borderColor: 'transparent', color: '#fff', opacity: pending ? 0.75 : 1 }
-          : { background: 'transparent', borderColor: 'var(--hn-line)', color: 'var(--hn-success)' }
-      }
+          ? 'border-transparent bg-primary text-primary-foreground'
+          : 'border-border bg-transparent text-present',
+        pending && 'opacity-75'
+      )}
     >
       {pending ? <Icons.loader2 size={17} className="animate-spin" /> : <Icons.check size={17} />}
       {pending ? 'Saving…' : dirty ? label : 'Saved'}

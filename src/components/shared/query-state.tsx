@@ -16,10 +16,7 @@ interface QueryStateProps {
  */
 export function QueryState({ isPending, message, onRetry, className }: QueryStateProps) {
   return (
-    <div
-      className={cn('grid place-items-center text-center', className)}
-      style={{ color: 'var(--hn-sub)' }}
-    >
+    <div className={cn('grid place-items-center text-center text-muted-foreground', className)}>
       {isPending ? (
         <Loader2 size={22} className="animate-spin" />
       ) : (
@@ -27,8 +24,7 @@ export function QueryState({ isPending, message, onRetry, className }: QueryStat
           {message}
           <button
             onClick={onRetry}
-            className="block mx-auto mt-2 text-[12.5px] font-bold"
-            style={{ color: 'var(--hn-clay)' }}
+            className="mx-auto mt-2 block text-[12.5px] font-bold text-primary"
           >
             Try again
           </button>

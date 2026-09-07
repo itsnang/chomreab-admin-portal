@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { cn } from '@/lib/utils'
 import { Icons } from './icons'
 
 interface NavItem {
@@ -13,10 +14,9 @@ interface NavItem {
 export function DashboardNav({ items }: { items: readonly NavItem[] }) {
   const pathname = usePathname()
   return (
-    <nav className="flex flex-col items-center gap-2 w-full">
+    <nav className="flex w-full flex-col items-center gap-2">
       {items.map((item) => {
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
-        const color = active ? 'var(--hn-clay)' : 'var(--hn-sub)'
         const Icon = Icons[item.icon]
         return (
           <Link
@@ -24,14 +24,13 @@ export function DashboardNav({ items }: { items: readonly NavItem[] }) {
             href={item.href}
             aria-label={item.label}
             aria-current={active ? 'page' : undefined}
-            className="flex flex-col items-center gap-1 w-[68px] py-2 rounded-[11px] text-center transition-colors"
-            style={{
-              color,
-              background: active ? 'color-mix(in srgb, var(--hn-clay) 10%, transparent)' : 'transparent',
-            }}
+            className={cn(
+              'flex w-[68px] flex-col items-center gap-1 rounded-lg py-2 text-center transition-colors',
+              active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
+            )}
           >
             <Icon size={22} />
-            <span className="text-[10px] font-bold leading-[1.15]">{item.label}</span>
+            <span className="text-[10px] leading-[1.15] font-bold">{item.label}</span>
           </Link>
         )
       })}

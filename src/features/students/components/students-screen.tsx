@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
@@ -8,177 +8,234 @@ import { useQueryClient } from '@tanstack/react-query'
 import { PageShell } from '@/components/shared/page-shell'
 import { QueryState } from '@/components/shared/query-state'
 import { StatusChip } from '@/components/shared/status-chip'
+import { EmptyState } from '@/components/shared/empty-state'
+import { ConfirmButton } from '@/components/shared/confirm-button'
+import { FormDialog } from '@/components/shared/form-dialog'
+import { SegmentedControl } from '@/components/shared/segmented-control'
+import { Icons } from '@/components/shared/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { avatarColor, initials } from '@/lib/avatar'
+import { InitialAvatar } from '@/components/shared/initial-avatar'
+import { cn } from '@/lib/utils'
 import { useClassrooms } from '@/features/classrooms/hooks/use-classrooms'
 import { useStudents, useLinkingStatus } from '../hooks/use-students'
-import { createStudent, deleteStudent, generateLinkingCode } from '../actions'
+import { createStudent, deleteStudent } from '../actions'
 import { studentSchema, type StudentInput } from '../schemas'
 
+const ALL = 'all'
+
 export function StudentsScreen() {
+  const [classFilter, setClassFilter] = useState<string>(ALL)
+  const [search, setSearch] = useState('')
+  const [addOpen, setAddOpen] = useState(false)
+
   const classroomsQuery = useClassrooms()
-  const studentsQuery = useStudents()
+  // The API filters by classroom, so the chips drive the query rather than
+  // trimming a full list on the client.
+  const studentsQuery = useStudents(classFilter === ALL ? undefined : classFilter)
   const linkingQuery = useLinkingStatus()
   const queryClient = useQueryClient()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [search, setSearch] = useState('')
 
   const form = useForm<StudentInput>({
     resolver: zodResolver(studentSchema),
     defaultValues: { name: '', classroomId: '' },
   })
 
-  const classroomName = (id: string) => classroomsQuery.data?.find((c) => c.id === id)?.name ?? id
-  const linkingByStudent = new Map((linkingQuery.data ?? []).map((l) => [l.studentId, l]))
+  const classroomName = (id: string) => classroomsQuery.data?.find((c) => c.id === id)?.name ?? '—'
+
+  const linkingByStudent = useMemo(
+    () => new Map((linkingQuery.data ?? []).map((l) => [l.studentId, l])),
+    [linkingQuery.data],
+  )
   const linkedCount = (linkingQuery.data ?? []).filter((l) => l.linked).length
 
-  const visibleStudents = (studentsQuery.data ?? []).filter((s) =>
-    s.name.toLowerCase().includes(search.trim().toLowerCase()),
-  )
+  const visibleStudents = useMemo(() => {
+    const students = studentsQuery.data ?? []
+    const term = search.trim().toLowerCase()
+    if (!term) return students
+    return students.filter((s) => s.name.toLowerCase().includes(term))
+  }, [studentsQuery.data, search])
 
   const onSubmit = async (values: StudentInput) => {
-    setIsSubmitting(true)
     const result = await createStudent(values)
-    setIsSubmitting(false)
     if (result.error) {
       toast.error(result.error)
       return
     }
     form.reset({ name: '', classroomId: '' })
+    setAddOpen(false)
+    toast.success(`${values.name} added.`)
     await queryClient.invalidateQueries({ queryKey: ['students'] })
   }
 
-  const onDelete = async (id: string) => {
+  const onDelete = async (id: string, name: string) => {
     const result = await deleteStudent(id)
     if (result.error) {
       toast.error(result.error)
       return
     }
-    await queryClient.invalidateQueries({ queryKey: ['students'] })
+    toast.success(`${name} removed.`)
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['students'] }),
+      queryClient.invalidateQueries({ queryKey: ['linking-status'] }),
+    ])
   }
 
-  const onGenerateCode = async (studentId: string) => {
-    const result = await generateLinkingCode(studentId)
-    if (result.error) {
-      toast.error(result.error)
-      return
-    }
-    toast.success(`Linking code: ${result.code}`)
-    await queryClient.invalidateQueries({ queryKey: ['linking-status'] })
-  }
+  const noClassrooms = (classroomsQuery.data?.length ?? 0) === 0
 
   return (
-    <PageShell heading="Students" description="Add students and generate parent linking codes.">
-      <div className="flex gap-3">
-        <div className="rounded-[18px] px-5 py-4 min-w-[140px]" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
-          <div className="font-mono text-[28px] font-semibold">{studentsQuery.data?.length ?? 0}</div>
-          <div className="text-xs mt-1" style={{ color: 'var(--hn-sub)' }}>
-            Total students
-          </div>
+    <PageShell
+      heading="Students"
+      description="Add students and keep them assigned to the right classroom."
+      actions={
+        <Form {...form}>
+          <FormDialog
+            open={addOpen}
+            onOpenChange={setAddOpen}
+            trigger={
+              <Button disabled={noClassrooms}>
+                <Icons.plus />
+                Add student
+              </Button>
+            }
+            title="Add a student"
+            description="They appear on their classroom's roster straight away."
+            submitLabel="Add student"
+            isSubmitting={form.formState.isSubmitting}
+            onSubmit={form.handleSubmit(onSubmit)}
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Sokha" autoComplete="off" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="classroomId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Classroom</FormLabel>
+                  <FormControl>
+                    <select
+                      className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                      {...field}
+                    >
+                      <option value="">Select a classroom</option>
+                      {classroomsQuery.data?.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </FormDialog>
+        </Form>
+      }
+      toolbar={
+        <div className="flex flex-wrap items-center gap-3">
+          <SegmentedControl
+            aria-label="Filter by classroom"
+            segments={[
+              { value: ALL, label: 'All classrooms' },
+              ...(classroomsQuery.data ?? []).map((c) => ({ value: c.id, label: c.name })),
+            ]}
+            value={classFilter}
+            onChange={setClassFilter}
+            size="sm"
+            className="flex-wrap"
+          />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name"
+            aria-label="Search students"
+            className="ml-auto max-w-[240px] bg-card"
+          />
         </div>
-        <div className="rounded-[18px] px-5 py-4 min-w-[140px]" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
-          <div className="font-mono text-[28px] font-semibold" style={{ color: 'var(--hn-success)' }}>
-            {linkedCount}
+      }
+    >
+      <div className="flex gap-3">
+        <div className="min-w-[140px] rounded-xl border bg-card px-5 py-4 shadow-card-sm">
+          <div className="font-mono text-[28px] font-semibold">{visibleStudents.length}</div>
+          <div className="mt-1 text-xs text-muted-foreground">Students shown</div>
+        </div>
+        <div className="min-w-[140px] rounded-xl border bg-card px-5 py-4 shadow-card-sm">
+          <div className="font-mono text-[28px] font-semibold text-present">
+            {linkingQuery.isPending ? '—' : linkedCount}
           </div>
-          <div className="text-xs mt-1" style={{ color: 'var(--hn-sub)' }}>
-            Linked
-          </div>
+          <div className="mt-1 text-xs text-muted-foreground">Parents linked</div>
         </div>
       </div>
 
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex gap-2 items-end rounded-[18px] p-[15px]"
-          style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}
-        >
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Sokha" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="classroomId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Classroom</FormLabel>
-                <FormControl>
-                  <select className="h-9 rounded-md border bg-background px-3 text-sm" {...field}>
-                    <option value="">Select a classroom</option>
-                    {classroomsQuery.data?.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit" disabled={isSubmitting}>
-            Add student
-          </Button>
-        </form>
-      </Form>
-
-      <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name" className="max-w-[240px]" />
-
       {studentsQuery.isPending || studentsQuery.isError ? (
-        <QueryState isPending={studentsQuery.isPending} message="Couldn't load students." onRetry={() => studentsQuery.refetch()} />
+        <QueryState
+          isPending={studentsQuery.isPending}
+          message="Couldn't load students."
+          onRetry={() => studentsQuery.refetch()}
+          className="py-14"
+        />
       ) : (
-        <div className="rounded-[18px] overflow-hidden" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
+        <div className="overflow-hidden rounded-xl border bg-card shadow-card-sm">
           {visibleStudents.length === 0 ? (
-            <p className="text-sm p-5" style={{ color: 'var(--hn-sub)' }}>
-              {search.trim() ? 'No students match your search.' : 'No students yet.'}
-            </p>
+            <EmptyState
+              icon={<Icons.graduationCap />}
+              title={search.trim() ? 'No matching students' : 'No students here yet'}
+              description={
+                search.trim()
+                  ? `Nothing matches “${search.trim()}”.`
+                  : noClassrooms
+                    ? 'Create a classroom first — every student belongs to one.'
+                    : 'Add a student to this classroom to get started.'
+              }
+              {...(search.trim() || noClassrooms
+                ? {}
+                : { action: <Button onClick={() => setAddOpen(true)}>Add a student</Button> })}
+            />
           ) : (
             visibleStudents.map((s, i) => {
               const linking = linkingByStudent.get(s.id)
               return (
                 <div
                   key={s.id}
-                  className="flex items-center gap-3 px-5 py-3.5"
-                  style={i > 0 ? { borderTop: '1px solid var(--hn-line-2)' } : undefined}
+                  className={cn('flex items-center gap-3 px-5 py-3.5', i > 0 && 'border-t')}
                 >
-                  <div
-                    className="w-9 h-9 rounded-full flex-none flex items-center justify-center text-sm font-bold text-white"
-                    style={{ background: avatarColor(s.id) }}
-                  >
-                    {initials(s.name)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold truncate">{s.name}</div>
-                    <div className="text-xs truncate" style={{ color: 'var(--hn-sub)' }}>
+                  <InitialAvatar id={s.id} name={s.name} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-bold">{s.name}</div>
+                    <div className="truncate text-xs text-muted-foreground">
                       {classroomName(s.classroomId)}
                     </div>
                   </div>
+                  {/* Codes are issued and copied on the Linking codes page; the
+                      chip here is a read-only summary. */}
                   {linkingQuery.isPending || linkingQuery.isError ? (
                     <StatusChip status="checking" />
-                  ) : linking?.linked ? (
-                    <StatusChip status="linked" />
                   ) : (
-                    <StatusChip status="unlinked" label={linking?.activeCode ? `Unlinked · ${linking.activeCode}` : 'Unlinked'} />
+                    <StatusChip status={linking?.linked ? 'linked' : 'unlinked'} />
                   )}
-                  <span className="flex gap-2 flex-none">
-                    <Button variant="outline" size="sm" onClick={() => onGenerateCode(s.id)}>
-                      Generate code
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => onDelete(s.id)}>
-                      Delete
-                    </Button>
-                  </span>
+                  <ConfirmButton
+                    destructive
+                    title={`Remove ${s.name}?`}
+                    description="They come off every roster. Past attendance records are kept."
+                    confirmLabel="Remove student"
+                    onConfirm={() => void onDelete(s.id, s.name)}
+                  >
+                    <Icons.trash2 />
+                    Remove
+                  </ConfirmButton>
                 </div>
               )
             })
