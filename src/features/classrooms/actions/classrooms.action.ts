@@ -5,11 +5,20 @@ import { ApiError, apiFetch } from '@/lib/api/server'
 import type { Classroom } from '../types'
 import type { ClassroomInput } from '../schemas'
 
-// Read responses come back camelCase (see attendance.action.ts); only request
-// bodies use the API's snake_case DTO shape.
+interface ClassroomApi {
+  id: string
+  name: string
+  grade_label: string | null
+  teacher_id: string | null
+}
+
+function toClassroom(api: ClassroomApi): Classroom {
+  return { id: api.id, name: api.name, gradeLabel: api.grade_label, teacherId: api.teacher_id }
+}
 
 export async function listClassrooms(): Promise<Classroom[]> {
-  return apiFetch<Classroom[]>('/classrooms')
+  const items = await apiFetch<ClassroomApi[]>('/classrooms')
+  return items.map(toClassroom)
 }
 
 export async function createClassroom(input: ClassroomInput): Promise<{ error?: string }> {

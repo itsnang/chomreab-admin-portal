@@ -5,23 +5,20 @@ import { ApiError, apiFetch } from '@/lib/api/server'
 import type { SchoolSettings } from '../types'
 import type { SettingsInput } from '../schemas'
 
-// Read responses come back camelCase (see attendance.action.ts); only request
-// bodies use the API's snake_case DTO shape. The bot token is never handed to
-// the client — only whether one is set.
-interface SchoolSettingsResponse {
-  schoolName: string
-  lateCutoffMinutes: number
-  absenceMessageTemplate: string
-  telegramBotToken: string | null
+interface SchoolSettingsApi {
+  school_name: string
+  late_cutoff_minutes: number
+  absence_message_template: string
+  telegram_bot_token: string | null
 }
 
 export async function getSchoolSettings(): Promise<SchoolSettings> {
-  const api = await apiFetch<SchoolSettingsResponse>('/school-settings')
+  const api = await apiFetch<SchoolSettingsApi>('/school-settings')
   return {
-    schoolName: api.schoolName,
-    lateCutoffMinutes: api.lateCutoffMinutes,
-    absenceMessageTemplate: api.absenceMessageTemplate,
-    telegramBotTokenSet: !!api.telegramBotToken,
+    schoolName: api.school_name,
+    lateCutoffMinutes: api.late_cutoff_minutes,
+    absenceMessageTemplate: api.absence_message_template,
+    telegramBotTokenSet: !!api.telegram_bot_token,
   }
 }
 
