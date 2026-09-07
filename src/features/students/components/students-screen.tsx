@@ -10,7 +10,7 @@ import { QueryState } from '@/components/shared/query-state'
 import { StatusChip } from '@/components/shared/status-chip'
 import { EmptyState } from '@/components/shared/empty-state'
 import { ConfirmButton } from '@/components/shared/confirm-button'
-import { FormDialog } from '@/components/shared/form-dialog'
+import { FormSheet } from '@/components/shared/form-sheet'
 import { SegmentedControl } from '@/components/shared/segmented-control'
 import { Icons } from '@/components/shared/icons'
 import { Button } from '@/components/ui/button'
@@ -90,7 +90,7 @@ export function StudentsScreen() {
       description="Add students and keep them assigned to the right classroom."
       actions={
         <Form {...form}>
-          <FormDialog
+          <FormSheet
             open={addOpen}
             onOpenChange={setAddOpen}
             trigger={
@@ -141,7 +141,7 @@ export function StudentsScreen() {
                 </FormItem>
               )}
             />
-          </FormDialog>
+          </FormSheet>
         </Form>
       }
       toolbar={

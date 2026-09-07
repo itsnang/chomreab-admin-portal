@@ -9,7 +9,7 @@ import { PageShell } from '@/components/shared/page-shell'
 import { QueryState } from '@/components/shared/query-state'
 import { EmptyState } from '@/components/shared/empty-state'
 import { ConfirmButton } from '@/components/shared/confirm-button'
-import { FormDialog } from '@/components/shared/form-dialog'
+import { FormSheet } from '@/components/shared/form-sheet'
 import { Icons } from '@/components/shared/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -68,7 +68,7 @@ export function StaffScreen() {
       description="Add teacher accounts and see what each one teaches."
       actions={
         <Form {...form}>
-          <FormDialog
+          <FormSheet
             open={addOpen}
             onOpenChange={setAddOpen}
             trigger={
@@ -132,7 +132,7 @@ export function StaffScreen() {
                 </FormItem>
               )}
             />
-          </FormDialog>
+          </FormSheet>
         </Form>
       }
     >
