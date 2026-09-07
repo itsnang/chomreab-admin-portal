@@ -5,33 +5,24 @@ import { ApiError, apiFetch } from '@/lib/api/server'
 import type { Teacher } from '../types'
 import type { TeacherInput } from '../schemas'
 
-interface TeacherApi {
-  id: string
-  name: string
-  email: string
-  classroom_names: string[]
-}
-
-function toTeacher(api: TeacherApi): Teacher {
-  return { id: api.id, name: api.name, email: api.email, classroomNames: api.classroom_names }
-}
+// Read responses come back camelCase (see attendance.action.ts); only request
+// bodies use the API's snake_case DTO shape.
 
 export async function listTeachers(): Promise<Teacher[]> {
-  const items = await apiFetch<TeacherApi[]>('/staff')
-  return items.map(toTeacher)
+  return apiFetch<Teacher[]>('/staff')
 }
 
-interface CreateTeacherApi {
+interface CreatedTeacher {
   id: string
   name: string
   email: string
-  temporary_password: string
+  temporaryPassword: string
 }
 
 export async function createTeacher(input: TeacherInput): Promise<{ temporaryPassword?: string; error?: string; classroomAssignmentFailed?: boolean }> {
-  let created: CreateTeacherApi
+  let created: CreatedTeacher
   try {
-    created = await apiFetch<CreateTeacherApi>('/staff', {
+    created = await apiFetch<CreatedTeacher>('/staff', {
       method: 'POST',
       body: JSON.stringify({ name: input.name, email: input.email }),
     })
@@ -56,7 +47,7 @@ export async function createTeacher(input: TeacherInput): Promise<{ temporaryPas
 
   revalidatePath('/staff')
   revalidatePath('/classrooms')
-  return { temporaryPassword: created.temporary_password, classroomAssignmentFailed }
+  return { temporaryPassword: created.temporaryPassword, classroomAssignmentFailed }
 }
 
 export async function deleteTeacher(id: string): Promise<{ error?: string }> {
