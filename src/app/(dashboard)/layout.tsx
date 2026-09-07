@@ -25,7 +25,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   return (
     <div className="flex min-h-svh bg-background">
-      <aside className="sticky top-0 flex h-svh w-22 flex-none flex-col items-center gap-2 border-r bg-card py-5">
+      <aside className="sticky top-0 flex h-svh w-22 flex-none flex-col items-center gap-2 overflow-y-auto border-r bg-card py-5">
         <div
           className="mb-3.5 grid size-[38px] flex-none place-items-center rounded-lg bg-primary text-[17px] font-extrabold text-primary-foreground"
           aria-hidden="true"
@@ -38,20 +38,25 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
         <div className="flex-1" />
 
-        <div className="flex flex-col items-center gap-2">
+        {/* Signing out was an unlabelled icon that all but vanished against the
+            rail in dark mode; it now reads as a destination like the nav items
+            above it, and the account it signs out of is named next to it. */}
+        <div className="flex w-full flex-col items-center gap-2 border-t pt-3">
           <InitialAvatar
             id={user.id}
             name={user.name}
-            className="text-xs"
             title={`${user.name} (${user.role})`}
           />
-          <form action={logout}>
+          <p className="w-full truncate px-1 text-center text-[10px] font-bold text-muted-foreground">
+            {user.name}
+          </p>
+          <form action={logout} className="flex w-full justify-center">
             <button
               type="submit"
-              title="Sign out"
-              className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex w-[68px] cursor-pointer flex-col items-center gap-1 rounded-lg py-2 text-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
-              <Icons.logOut size={18} />
+              <Icons.logOut size={22} />
+              <span className="text-[10px] leading-[1.15] font-bold">Sign out</span>
             </button>
           </form>
         </div>
