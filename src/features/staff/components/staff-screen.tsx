@@ -10,6 +10,7 @@ import { QueryState } from '@/components/shared/query-state'
 import { EmptyState } from '@/components/shared/empty-state'
 import { ConfirmButton } from '@/components/shared/confirm-button'
 import { FormSheet } from '@/components/shared/form-sheet'
+import { TempPasswordPanel, type CreatedTeacherCredentials } from './temp-password-panel'
 import { Icons } from '@/components/shared/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,6 +27,7 @@ export function StaffScreen() {
   const teachersQuery = useTeachers()
   const queryClient = useQueryClient()
   const [addOpen, setAddOpen] = useState(false)
+  const [credentials, setCredentials] = useState<CreatedTeacherCredentials | null>(null)
 
   const form = useForm<TeacherInput>({
     resolver: zodResolver(teacherSchema),
@@ -38,14 +40,11 @@ export function StaffScreen() {
       toast.error(result.error)
       return
     }
-    if (result.classroomAssignmentFailed) {
-      toast.warning(
-        `Teacher added (password: ${result.temporaryPassword}), but classroom assignment failed. Assign from the Classrooms screen.`,
-        { duration: Infinity }
-      )
-    } else {
-      toast.success(`Teacher added. Temporary password: ${result.temporaryPassword}`, { duration: Infinity })
-    }
+    setCredentials({
+      name: values.name,
+      password: result.temporaryPassword ?? '',
+      classroomAssignmentFailed: result.classroomAssignmentFailed ?? false,
+    })
     form.reset({ name: '', email: '', classroomId: '' })
     setAddOpen(false)
     await queryClient.invalidateQueries({ queryKey: ['teachers'] })
@@ -63,6 +62,8 @@ export function StaffScreen() {
   }
 
   return (
+    <>
+    <TempPasswordPanel credentials={credentials} onDismiss={() => setCredentials(null)} />
     <PageShell
       heading="Staff"
       description="Add teacher accounts and see what each one teaches."
@@ -183,5 +184,6 @@ export function StaffScreen() {
         </div>
       )}
     </PageShell>
+    </>
   )
 }

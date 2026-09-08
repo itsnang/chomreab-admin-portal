@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
@@ -13,6 +14,9 @@ import { Button } from '@/components/ui/button'
 
 export function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false)
+  // changePassword revokes the session and sends the user back here, so say so
+  // rather than leaving them wondering why they were signed out.
+  const justChangedPassword = useSearchParams().get('changed') === '1'
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -43,7 +47,9 @@ export function LoginScreen() {
       <div className="w-full max-w-sm rounded-xl border bg-card px-7 py-8 shadow-card">
         <h1 className="text-2xl font-extrabold tracking-tight">Welcome back</h1>
         <p className="mt-1 mb-7 text-[13px] text-muted-foreground">
-          Sign in with your admin or teacher account
+          {justChangedPassword
+            ? 'Password changed. Sign in with your new one.'
+            : 'Sign in with your admin or teacher account'}
         </p>
 
         <Form {...form}>

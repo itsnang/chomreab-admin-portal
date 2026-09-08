@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getCurrentUser, logout } from '@/features/auth/actions'
 import { DashboardNav } from '@/components/shared/dashboard-nav'
@@ -19,6 +20,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const user = await getCurrentUser()
   if (!user) {
     redirect('/login')
+  }
+  // An admin generated this account's password and knows it. Nothing in the
+  // app is reachable until the teacher replaces it.
+  if (user.mustChangePassword) {
+    redirect('/change-password')
   }
 
   const nav = user.role === 'admin' ? ADMIN_NAV : TEACHER_NAV
@@ -50,6 +56,13 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           <p className="w-full truncate px-1 text-center text-[10px] font-bold text-muted-foreground">
             {user.name}
           </p>
+          <Link
+            href="/change-password"
+            className="flex w-[68px] flex-col items-center gap-1 rounded-lg py-2 text-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Icons.key size={22} />
+            <span className="text-[10px] leading-[1.15] font-bold">Password</span>
+          </Link>
           <form action={logout} className="flex w-full justify-center">
             <button
               type="submit"

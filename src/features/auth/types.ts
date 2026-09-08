@@ -7,6 +7,10 @@ export interface AuthUser {
   name: string
   email: string
   role: UserRole
+  /** True while the account still carries the temporary password an admin
+   *  generated for it. The dashboard holds the user on /change-password until
+   *  they replace it. */
+  mustChangePassword: boolean
 }
 
 export const loginSchema = z.object({
@@ -15,3 +19,20 @@ export const loginSchema = z.object({
 })
 
 export type LoginInput = z.infer<typeof loginSchema>
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Enter your current password'),
+    newPassword: z.string().min(8, 'Use at least 8 characters'),
+    confirmPassword: z.string().min(1, 'Repeat the new password'),
+  })
+  .refine((v) => v.newPassword === v.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  })
+  .refine((v) => v.newPassword !== v.currentPassword, {
+    message: 'Choose a password different from your current one',
+    path: ['newPassword'],
+  })
+
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>

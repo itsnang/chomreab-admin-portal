@@ -36,11 +36,18 @@ function cookieOptions(maxAge: number) {
   }
 }
 
-/** The token + user payload returned by login/register (after envelope unwrap). */
+/** The token + user payload returned by login (after envelope unwrap). Keys
+ *  are snake_case: the API's SnakeCaseInterceptor rewrites every response. */
 export interface SessionData {
   access_token: string
   refresh_token: string
-  user: AuthUser
+  user: {
+    id: string
+    name: string
+    email: string
+    role: AuthUser['role']
+    must_change_password: boolean
+  }
 }
 
 /** Write the access + refresh token cookies. Used on login and on token refresh
@@ -61,7 +68,14 @@ export async function persistTokens(accessToken: string, refreshToken: string) {
 /** Write the full session (tokens + user) after login or register. */
 export async function persistSession(data: SessionData): Promise<void> {
   const { cookieStore, refreshMaxAge } = await persistTokens(data.access_token, data.refresh_token)
-  cookieStore.set(USER_COOKIE, JSON.stringify(data.user), cookieOptions(refreshMaxAge))
+  const user: AuthUser = {
+    id: data.user.id,
+    name: data.user.name,
+    email: data.user.email,
+    role: data.user.role,
+    mustChangePassword: data.user.must_change_password,
+  }
+  cookieStore.set(USER_COOKIE, JSON.stringify(user), cookieOptions(refreshMaxAge))
 }
 
 /** Remove every session cookie (logout, or when a refresh token is rejected). */
