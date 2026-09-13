@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation'
 import { ApiError, apiFetch } from '@/lib/api/server'
 import { clearSession } from './session-store'
-import type { ChangePasswordInput } from '../types'
+import type { ChangePasswordInput } from '../schemas'
 
 /**
  * Replace the signed-in user's password. The API revokes every refresh token

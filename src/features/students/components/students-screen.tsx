@@ -4,16 +4,16 @@ import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { PageShell } from '@/components/shared/page-shell'
-import { QueryState } from '@/components/shared/query-state'
+import { ListCard } from '@/components/shared/list-card'
+import { ListRow } from '@/components/shared/list-row'
+import { StatTile } from '@/components/shared/stat-tile'
 import { StatusChip } from '@/components/shared/status-chip'
 import { EmptyState } from '@/components/shared/empty-state'
 import { ConfirmButton } from '@/components/shared/confirm-button'
 import { SegmentedControl } from '@/components/shared/segmented-control'
-import { InitialAvatar } from '@/components/shared/initial-avatar'
 import { Icons } from '@/components/shared/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
 import { useClassrooms } from '@/features/classrooms/hooks/use-classrooms'
 import { useStudents, useLinkingStatus } from '../hooks/use-students'
 import { createStudent, updateStudent, setStudentStatus, deleteStudent } from '../actions'
@@ -24,11 +24,12 @@ import { StudentFormSheet } from './student-form-sheet'
 const ALL = 'all'
 const BLANK: StudentInput = { name: '', classroomId: '' }
 
-type Roll = 'active' | 'inactive'
+type Roll = 'active' | 'inactive' | 'all'
 
 const ROLL_SEGMENTS = [
   { value: 'active' as const, label: 'Enrolled' },
   { value: 'inactive' as const, label: 'Left' },
+  { value: 'all' as const, label: 'All' },
 ]
 
 export function StudentsScreen() {
@@ -43,7 +44,7 @@ export function StudentsScreen() {
   // rather than trimming a full list on the client.
   const studentsQuery = useStudents(
     classFilter === ALL ? undefined : classFilter,
-    roll === 'inactive',
+    roll !== 'active',
   )
   const linkingQuery = useLinkingStatus()
   const queryClient = useQueryClient()
@@ -61,7 +62,7 @@ export function StudentsScreen() {
     // `include_inactive` widens the list rather than replacing it, so the
     // "Left" tab has to narrow it back down to just those students.
     const students = (studentsQuery.data ?? []).filter((s) =>
-      roll === 'inactive' ? s.status === 'inactive' : s.status === 'active',
+      roll === 'all' ? true : roll === 'inactive' ? s.status === 'inactive' : s.status === 'active',
     )
     const term = search.trim().toLowerCase()
     if (!term) return students
@@ -96,8 +97,8 @@ export function StudentsScreen() {
     if (result.error) return void toast.error(result.error)
     toast.success(
       status === 'inactive'
-        ? `${student.name} marked as left.`
-        : `${student.name} is enrolled again.`,
+        ? `${student.name} deactivated.`
+        : `${student.name} reactivated.`,
     )
     await refresh()
   }
@@ -177,45 +178,46 @@ export function StudentsScreen() {
         onSubmit={onEdit}
       />
 
-      <div className="flex gap-3">
-        <div className="min-w-[140px] rounded-xl border bg-card px-5 py-4 shadow-card-sm">
-          <div className="font-mono text-[28px] font-semibold">{visibleStudents.length}</div>
-          <div className="mt-1 text-xs text-muted-foreground">
-            {roll === 'inactive' ? 'Students shown (left)' : 'Students shown'}
-          </div>
+      <div className="flex flex-wrap gap-3">
+        <div className="min-w-[140px] flex-1 rounded-xl border bg-card px-5 py-4 shadow-card-sm sm:flex-none">
+          <StatTile
+            icon={Icons.users}
+            tone="primary"
+            value={visibleStudents.length}
+            label={roll === 'inactive' ? 'Inactive students' : 'Students shown'}
+          />
         </div>
-        <div className="min-w-[140px] rounded-xl border bg-card px-5 py-4 shadow-card-sm">
-          <div className="font-mono text-[28px] font-semibold text-present">
-            {linkingQuery.isPending ? '—' : linkedCount}
-          </div>
-          <div className="mt-1 text-xs text-muted-foreground">Parents linked</div>
+        <div className="min-w-[140px] flex-1 rounded-xl border bg-card px-5 py-4 shadow-card-sm sm:flex-none">
+          <StatTile
+            icon={Icons.link2}
+            tone="present"
+            value={linkingQuery.isPending ? '—' : linkedCount}
+            label="Parents linked"
+          />
         </div>
       </div>
 
-      {studentsQuery.isPending || studentsQuery.isError ? (
-        <QueryState
-          isPending={studentsQuery.isPending}
-          message="Couldn't load students."
-          onRetry={() => studentsQuery.refetch()}
-          className="py-14"
-        />
-      ) : (
-        <div className="overflow-hidden rounded-xl border bg-card shadow-card-sm">
-          {visibleStudents.length === 0 ? (
+      <ListCard
+        isPending={studentsQuery.isPending}
+        isError={studentsQuery.isError}
+        errorMessage="Couldn't load students."
+        onRetry={() => studentsQuery.refetch()}
+      >
+        {visibleStudents.length === 0 ? (
             <EmptyState
               icon={<Icons.graduationCap />}
               title={
                 search.trim()
                   ? 'No matching students'
                   : roll === 'inactive'
-                    ? 'Nobody has left'
+                    ? 'No inactive students'
                     : 'No students here yet'
               }
               description={
                 search.trim()
                   ? `Nothing matches “${search.trim()}”.`
                   : roll === 'inactive'
-                    ? 'Students you mark as left appear here, with their history intact.'
+                    ? 'Students you deactivate appear here, with their history intact.'
                     : noClassrooms
                       ? 'Create a classroom first — every student belongs to one.'
                       : 'Add a student to this classroom to get started.'
@@ -224,71 +226,73 @@ export function StudentsScreen() {
                 ? {}
                 : { action: <Button onClick={() => setAddOpen(true)}>Add a student</Button> })}
             />
-          ) : (
-            visibleStudents.map((s, i) => {
-              const linking = linkingByStudent.get(s.id)
-              const left = s.status === 'inactive'
-              return (
-                <div
-                  key={s.id}
-                  className={cn('flex items-center gap-3 px-5 py-3.5', i > 0 && 'border-t')}
-                >
-                  <InitialAvatar id={s.id} name={s.name} className={cn(left && 'opacity-50')} />
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-bold">{s.name}</div>
-                    <div className="truncate text-xs text-muted-foreground">
-                      {classroomName(s.classroomId)}
-                    </div>
-                  </div>
+        ) : (
+          visibleStudents.map((s, i) => {
+            const linking = linkingByStudent.get(s.id)
+            const inactive = s.status === 'inactive'
+            return (
+              <ListRow
+                key={s.id}
+                id={s.id}
+                first={i === 0}
+                muted={inactive}
+                title={s.name}
+                subtitle={classroomName(s.classroomId)}
+                actions={
+                  <>
+                    {inactive ? (
+                      <StatusChip status="inactive" />
+                    ) : linkingQuery.isPending || linkingQuery.isError ? (
+                      <StatusChip status="checking" />
+                    ) : (
+                      <StatusChip status={linking?.linked ? 'linked' : 'unlinked'} />
+                    )}
 
-                  {left ? (
-                    <StatusChip status="inactive" label="Left" />
-                  ) : linkingQuery.isPending || linkingQuery.isError ? (
-                    <StatusChip status="checking" />
-                  ) : (
-                    <StatusChip status={linking?.linked ? 'linked' : 'unlinked'} />
-                  )}
-
-                  <Button variant="ghost" size="sm" onClick={() => setEditing(s)}>
-                    <Icons.pencil />
-                    Edit
-                  </Button>
-
-                  {left ? (
-                    <Button variant="outline" size="sm" onClick={() => void onSetStatus(s, 'active')}>
-                      Re-enrol
+                    <Button variant="ghost" size="sm" onClick={() => setEditing(s)}>
+                      <Icons.pencil />
+                      Edit
                     </Button>
-                  ) : (
-                    <ConfirmButton
-                      variant="outline"
-                      title={`Mark ${s.name} as left?`}
-                      description="They come off every roster and stop being counted, and their attendance history stays readable. You can re-enrol them later."
-                      confirmLabel="Mark as left"
-                      onConfirm={() => void onSetStatus(s, 'inactive')}
-                    >
-                      Mark as left
-                    </ConfirmButton>
-                  )}
 
-                  {/* Hard delete is for a student entered twice, not for one who
-                      has left — it orphans their attendance history. */}
-                  <ConfirmButton
-                    destructive
-                    size="icon-sm"
-                    aria-label={`Delete ${s.name}`}
-                    title={`Permanently delete ${s.name}?`}
-                    description="This is for a record entered by mistake. Their attendance history, audit trail and parent link are left pointing at a student who no longer exists, and will show as “Unknown student”. To remove a child who has left, mark them as left instead."
-                    confirmLabel="Delete permanently"
-                    onConfirm={() => void onDelete(s)}
-                  >
-                    <Icons.trash2 />
-                  </ConfirmButton>
-                </div>
-              )
-            })
-          )}
-        </div>
-      )}
+                    {inactive ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void onSetStatus(s, 'active')}
+                      >
+                        Reactivate
+                      </Button>
+                    ) : (
+                      <ConfirmButton
+                        variant="outline"
+                        title={`Deactivate ${s.name}?`}
+                        description="They come off every roster and stop being counted, and their attendance history stays readable. You can reactivate them later."
+                        confirmLabel="Deactivate"
+                        onConfirm={() => void onSetStatus(s, 'inactive')}
+                      >
+                        Deactivate
+                      </ConfirmButton>
+                    )}
+
+                    {/* Hard delete is for a student entered twice, not for one
+                        who has left — it orphans their attendance history. */}
+                    <ConfirmButton
+                      destructive
+                      size="icon-sm"
+                      aria-label={`Delete ${s.name}`}
+                      title={`Permanently delete ${s.name}?`}
+                      description="This is for a record entered by mistake. Their attendance history, audit trail and parent link are left pointing at a student who no longer exists, and will show as “Unknown student”. To remove a child who has left, deactivate them instead."
+                      confirmLabel="Delete permanently"
+                      onConfirm={() => void onDelete(s)}
+                    >
+                      <Icons.trash2 />
+                    </ConfirmButton>
+                  </>
+                }
+              />
+            )
+          })
+        )}
+      </ListCard>
     </PageShell>
   )
 }

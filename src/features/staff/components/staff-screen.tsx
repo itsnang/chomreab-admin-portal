@@ -6,7 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { PageShell } from '@/components/shared/page-shell'
-import { QueryState } from '@/components/shared/query-state'
+import { ListCard } from '@/components/shared/list-card'
+import { ListRow } from '@/components/shared/list-row'
 import { EmptyState } from '@/components/shared/empty-state'
 import { ConfirmButton } from '@/components/shared/confirm-button'
 import { FormSheet } from '@/components/shared/form-sheet'
@@ -16,8 +17,6 @@ import { SelectField } from '@/components/shared/select-field'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { InitialAvatar } from '@/components/shared/initial-avatar'
-import { cn } from '@/lib/utils'
 import { useClassrooms } from '@/features/classrooms/hooks/use-classrooms'
 import { useTeachers } from '../hooks/use-staff'
 import { createTeacher, updateTeacher, resetTeacherPassword, deleteTeacher } from '../actions'
@@ -220,67 +219,64 @@ export function StaffScreen() {
         </FormSheet>
       </Form>
 
-      {teachersQuery.isPending || teachersQuery.isError ? (
-        <QueryState
-          isPending={teachersQuery.isPending}
-          message="Couldn't load staff."
-          onRetry={() => teachersQuery.refetch()}
-          className="py-14"
-        />
-      ) : (
-        <div className="overflow-hidden rounded-xl border bg-card shadow-card-sm">
-          {teachersQuery.data.length === 0 ? (
-            <EmptyState
-              icon={<Icons.users />}
-              title="No teacher accounts yet"
-              description="Add a teacher so they can sign in and mark their classrooms."
-              action={<Button onClick={() => setAddOpen(true)}>Add a teacher</Button>}
+      <ListCard
+        isPending={teachersQuery.isPending}
+        isError={teachersQuery.isError}
+        errorMessage="Couldn't load staff."
+        onRetry={() => teachersQuery.refetch()}
+      >
+        {(teachersQuery.data ?? []).length === 0 ? (
+          <EmptyState
+            icon={<Icons.users />}
+            title="No teacher accounts yet"
+            description="Add a teacher so they can sign in and mark their classrooms."
+            action={<Button onClick={() => setAddOpen(true)}>Add a teacher</Button>}
+          />
+        ) : (
+          (teachersQuery.data ?? []).map((t, i) => (
+            <ListRow
+              key={t.id}
+              id={t.id}
+              first={i === 0}
+              title={t.name}
+              subtitle={t.email}
+              actions={
+                <>
+                  <span className="hidden w-[200px] truncate text-xs text-muted-foreground md:block">
+                    {t.classroomNames.length > 0 ? t.classroomNames.join(', ') : 'Unassigned'}
+                  </span>
+                  <Button variant="ghost" size="sm" onClick={() => openEdit(t)}>
+                    <Icons.pencil />
+                    Edit
+                  </Button>
+                  <ConfirmButton
+                    variant="outline"
+                    disabled={resettingId === t.id}
+                    title={`Reset ${t.name}'s password?`}
+                    description="Issues a new temporary password, shown to you once. Their current password stops working immediately and they are signed out everywhere."
+                    confirmLabel="Reset password"
+                    onConfirm={() => void onResetPassword(t)}
+                  >
+                    <Icons.key />
+                    Reset password
+                  </ConfirmButton>
+                  <ConfirmButton
+                    destructive
+                    size="icon-sm"
+                    aria-label={`Remove ${t.name}`}
+                    title={`Remove ${t.name}?`}
+                    description="Their account is deleted and they lose access immediately. Attendance they recorded is kept."
+                    confirmLabel="Remove teacher"
+                    onConfirm={() => void onDelete(t.id, t.name)}
+                  >
+                    <Icons.trash2 />
+                  </ConfirmButton>
+                </>
+              }
             />
-          ) : (
-            teachersQuery.data.map((t, i) => (
-              <div
-                key={t.id}
-                className={cn('flex items-center gap-3 px-5 py-3.5', i > 0 && 'border-t')}
-              >
-                <InitialAvatar id={t.id} name={t.name} />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-bold">{t.name}</div>
-                  <div className="truncate text-xs text-muted-foreground">{t.email}</div>
-                </div>
-                <div className="w-[200px] truncate text-xs text-muted-foreground">
-                  {t.classroomNames.length > 0 ? t.classroomNames.join(', ') : 'Unassigned'}
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => openEdit(t)}>
-                  <Icons.pencil />
-                  Edit
-                </Button>
-                <ConfirmButton
-                  variant="outline"
-                  disabled={resettingId === t.id}
-                  title={`Reset ${t.name}'s password?`}
-                  description="Issues a new temporary password, shown to you once. Their current password stops working immediately and they are signed out everywhere."
-                  confirmLabel="Reset password"
-                  onConfirm={() => void onResetPassword(t)}
-                >
-                  <Icons.key />
-                  Reset password
-                </ConfirmButton>
-                <ConfirmButton
-                  destructive
-                  size="icon-sm"
-                  aria-label={`Remove ${t.name}`}
-                  title={`Remove ${t.name}?`}
-                  description="Their account is deleted and they lose access immediately. Attendance they recorded is kept."
-                  confirmLabel="Remove teacher"
-                  onConfirm={() => void onDelete(t.id, t.name)}
-                >
-                  <Icons.trash2 />
-                </ConfirmButton>
-              </div>
-            ))
-          )}
-        </div>
-      )}
+          ))
+        )}
+      </ListCard>
     </PageShell>
     </>
   )

@@ -54,7 +54,15 @@ src/features/<domain>/
 - `attendance` slice → imports `useClassrooms` from `classrooms` (classroom picker for the roster)
 - `classrooms` slice → imports `useTeachers` from `staff` (teacher picker when assigning a classroom)
 
-**Shared presentational components** live in `src/components/shared/` — used across slices, must not import from any feature slice: `page-shell.tsx`, `status-chip.tsx`, `form-controls.tsx`, `query-state.tsx`, `drawer-sheet.tsx`, `theme-toggle.tsx`, `navigation-progress.tsx`, `icons.tsx`, `thumb.tsx`.
+**Shared presentational components** live in `src/components/shared/` — used across slices, must not import from any feature slice:
+
+| | |
+|---|---|
+| Layout | `page-shell.tsx`, `section-header.tsx` |
+| Lists & data | `stat-tile.tsx`, `status-chip.tsx`, `icon-row.tsx`, `empty-state.tsx`, `query-state.tsx` |
+| Input | `form-sheet.tsx`, `select-field.tsx`, `segmented-control.tsx`, `confirm-button.tsx` |
+| Chrome | `dashboard-nav.tsx`, `initial-avatar.tsx`, `theme-toggle.tsx`, `navigation-progress.tsx`, `icons.tsx` |
+| Tokens | `tone.ts` — the semantic colour roles (`present`/`late`/`absent`/`unmarked`/`primary`); components name a `Tone`, never a raw colour |
 
 **Rules enforced by reviewers:**
 - `'use server'` goes on each action file, never on `index.ts`
@@ -62,7 +70,7 @@ src/features/<domain>/
 - `revalidatePath()` / `revalidateTag()` must be called **after** the mutation commits, never before
 - Actions that return `{ error?: string }` must `return { error: '...' }` on failure, not `throw`
 - Component files use **kebab-case** (`dashboard-screen.tsx`), matching `src/components/ui/`; the exported component keeps **PascalCase**. Non-component modules follow `*.store.ts`, `*.action.ts`, `use-*.ts`, `types.ts`
-- **Every form must use React Hook Form + Zod.** Define a `z.object()` schema in `schemas/<form>.schema.ts`, export the inferred type (`z.infer<typeof schema>`), wire up with `useForm({ resolver: zodResolver(schema), defaultValues: { ... } })`. Avoid `z.coerce` and `.default()` — they break `exactOptionalPropertyTypes`; parse numbers explicitly in `onSubmit`.
+- **Every form must use React Hook Form + Zod.** Define a `z.object()` schema in `schemas/<form>.schema.ts`, export the inferred type (`z.infer<typeof schema>`), wire up with `useForm({ resolver: zodResolver(schema), defaultValues: { ... } })`. Avoid `z.coerce` and `.default()` on **optional** fields — that is where they break `exactOptionalPropertyTypes`; parse those numbers explicitly in `onSubmit`. On a required numeric field bound to `<input type="number">`, `z.coerce.number<number>()` is fine and preferred (pin the input generic, or zod v4 infers `unknown` and `zodResolver` stops matching `useForm<T>`).
 
 ### Route groups
 

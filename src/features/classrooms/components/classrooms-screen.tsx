@@ -6,7 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { PageShell } from '@/components/shared/page-shell'
-import { QueryState } from '@/components/shared/query-state'
+import { ListCard } from '@/components/shared/list-card'
+import { ListRow } from '@/components/shared/list-row'
 import { EmptyState } from '@/components/shared/empty-state'
 import { ConfirmButton } from '@/components/shared/confirm-button'
 import { FormSheet } from '@/components/shared/form-sheet'
@@ -14,9 +15,15 @@ import { Icons } from '@/components/shared/icons'
 import { SelectField } from '@/components/shared/select-field'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { InitialAvatar } from '@/components/shared/initial-avatar'
-import { cn } from '@/lib/utils'
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
 // Cross-slice import: the classroom form assigns a teacher, and staff owns
 // that list. Documented alongside the other exceptions in CLAUDE.md.
 import { useTeachers } from '@/features/staff/hooks/use-staff'
@@ -31,7 +38,6 @@ export function ClassroomsScreen() {
   const queryClient = useQueryClient()
   const [addOpen, setAddOpen] = useState(false)
   const [editing, setEditing] = useState<Classroom | null>(null)
-  const [teacherId, setTeacherId] = useState('')
 
   const form = useForm<ClassroomInput>({
     resolver: zodResolver(classroomSchema),
@@ -52,21 +58,21 @@ export function ClassroomsScreen() {
 
   const editForm = useForm<ClassroomInput>({
     resolver: zodResolver(classroomSchema),
-    defaultValues: { name: '', gradeLabel: '' },
+    defaultValues: { name: '', gradeLabel: '', teacherId: '' },
   })
 
   const openEdit = (classroom: Classroom) => {
     setEditing(classroom)
-    setTeacherId(classroom.teacherId ?? '')
     editForm.reset({
       name: classroom.name,
       gradeLabel: classroom.gradeLabel ?? '',
+      teacherId: classroom.teacherId ?? '',
     })
   }
 
   const onEdit = async (values: ClassroomInput) => {
     if (!editing) return
-    const result = await updateClassroom(editing.id, { ...values, teacherId })
+    const result = await updateClassroom(editing.id, values)
     if (result.error) {
       toast.error(result.error)
       return
@@ -97,7 +103,7 @@ export function ClassroomsScreen() {
   return (
     <PageShell
       heading="Classrooms"
-      description="Create classes and assign teachers."
+      description="Create classrooms and assign teachers."
       actions={
         <Form {...form}>
           <FormSheet
@@ -182,82 +188,77 @@ export function ClassroomsScreen() {
               </FormItem>
             )}
           />
-          <div>
-            <label
-              htmlFor="classroom-teacher"
-              className="mb-2 block text-sm leading-none font-medium"
-            >
-              Assigned teacher
-            </label>
-            <SelectField
-              id="classroom-teacher"
-              value={teacherId}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setTeacherId(e.target.value)}
-            >
-              <option value="">Unassigned</option>
-              {teachersQuery.data?.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </SelectField>
-            <p className="mt-1.5 text-xs text-muted-foreground">
-              Only the assigned teacher sees this classroom on their attendance screen.
-            </p>
-          </div>
+          <FormField
+            control={editForm.control}
+            name="teacherId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Assigned teacher</FormLabel>
+                <FormControl>
+                  <SelectField {...field}>
+                    <option value="">Unassigned</option>
+                    {teachersQuery.data?.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </SelectField>
+                </FormControl>
+                <FormDescription>
+                  Only the assigned teacher sees this classroom on their attendance screen.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </FormSheet>
       </Form>
 
-      {query.isPending || query.isError ? (
-        <QueryState
-          isPending={query.isPending}
-          message="Couldn't load classrooms."
-          onRetry={() => query.refetch()}
-          className="py-14"
-        />
-      ) : (
-        <div className="overflow-hidden rounded-xl border bg-card shadow-card-sm">
-          {query.data.length === 0 ? (
-            <EmptyState
-              icon={<Icons.building2 />}
-              title="No classrooms yet"
-              description="Create your first classroom, then add students to it."
-              action={<Button onClick={() => setAddOpen(true)}>Add a classroom</Button>}
+      <ListCard
+        isPending={query.isPending}
+        isError={query.isError}
+        errorMessage="Couldn't load classrooms."
+        onRetry={() => query.refetch()}
+      >
+        {(query.data ?? []).length === 0 ? (
+          <EmptyState
+            icon={<Icons.building2 />}
+            title="No classrooms yet"
+            description="Create your first classroom, then add students to it."
+            action={<Button onClick={() => setAddOpen(true)}>Add a classroom</Button>}
+          />
+        ) : (
+          (query.data ?? []).map((c, i) => (
+            <ListRow
+              key={c.id}
+              id={c.id}
+              first={i === 0}
+              title={c.name}
+              subtitle={[c.gradeLabel, teacherName(c.teacherId) ?? 'No teacher assigned']
+                .filter(Boolean)
+                .join(' · ')}
+              actions={
+                <>
+                  <Button variant="ghost" size="sm" onClick={() => openEdit(c)}>
+                    <Icons.pencil />
+                    Edit
+                  </Button>
+                  <ConfirmButton
+                    destructive
+                    title={`Delete ${c.name}?`}
+                    description="The classroom is removed for everyone. Students in it must be reassigned before they can be marked again."
+                    confirmLabel="Delete classroom"
+                    onConfirm={() => void onDelete(c.id, c.name)}
+                  >
+                    <Icons.trash2 />
+                    Delete
+                  </ConfirmButton>
+                </>
+              }
             />
-          ) : (
-            query.data.map((c, i) => (
-              <div
-                key={c.id}
-                className={cn('flex items-center gap-3 px-5 py-3.5', i > 0 && 'border-t')}
-              >
-                <InitialAvatar id={c.id} name={c.name} />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-bold">{c.name}</div>
-                  <div className="truncate text-xs text-muted-foreground">
-                    {[c.gradeLabel, teacherName(c.teacherId) ?? 'No teacher assigned']
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </div>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => openEdit(c)}>
-                  <Icons.pencil />
-                  Edit
-                </Button>
-                <ConfirmButton
-                  destructive
-                  title={`Delete ${c.name}?`}
-                  description="The classroom is removed for everyone. Students in it must be reassigned before they can be marked again."
-                  confirmLabel="Delete classroom"
-                  onConfirm={() => void onDelete(c.id, c.name)}
-                >
-                  <Icons.trash2 />
-                  Delete
-                </ConfirmButton>
-              </div>
-            ))
-          )}
-        </div>
-      )}
+          ))
+        )}
+      </ListCard>
     </PageShell>
   )
 }

@@ -36,7 +36,7 @@ export async function createClassroom(input: ClassroomInput): Promise<{ error?: 
 
 export async function updateClassroom(
   id: string,
-  input: ClassroomInput & { teacherId?: string },
+  input: ClassroomInput,
 ): Promise<{ error?: string }> {
   try {
     await apiFetch(`/classrooms/${id}`, {
