@@ -47,13 +47,16 @@ export function ListRow({
           className={cn(muted && 'opacity-50')}
         />
       )}
-      <div className="min-w-0 flex-1">
+      {/* A floor rather than `min-w-0`: without it the name collapses to an
+          ellipsis to make room for the actions, instead of the actions
+          wrapping to their own line. */}
+      <div className="min-w-[9rem] flex-1">
         <div className={cn('truncate text-sm font-bold', muted && 'text-muted-foreground')}>
           {title}
         </div>
         {subtitle && <div className="truncate text-xs text-muted-foreground">{subtitle}</div>}
       </div>
-      {actions}
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   )
 }

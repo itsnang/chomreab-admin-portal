@@ -3,8 +3,9 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getCurrentUser, logout } from '@/features/auth/actions'
 import { DashboardNav } from '@/components/shared/dashboard-nav'
-import { Icons } from '@/components/shared/icons'
+import { MobileNav, type MobileNavItem } from '@/components/shared/mobile-nav'
 import { InitialAvatar } from '@/components/shared/initial-avatar'
+import { Icons } from '@/components/shared/icons'
 
 const ADMIN_NAV = [
   { href: '/classrooms', label: 'Classrooms', icon: 'building2' },
@@ -13,8 +14,12 @@ const ADMIN_NAV = [
   { href: '/staff', label: 'Staff', icon: 'users' },
   { href: '/reports', label: 'Reports', icon: 'barChart3' },
   { href: '/settings', label: 'Settings', icon: 'settings' },
-] as const
-const TEACHER_NAV = [{ href: '/attendance', label: 'Attendance', icon: 'clipboardCheck' }] as const
+] as const satisfies readonly MobileNavItem[]
+const TEACHER_NAV = [
+  { href: '/attendance', label: 'Attendance', icon: 'clipboardCheck' },
+] as const satisfies readonly MobileNavItem[]
+
+const SIGN_OUT_LABEL = 'Sign out'
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const user = await getCurrentUser()
@@ -31,9 +36,42 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   return (
     <div className="flex min-h-svh flex-col bg-background sm:flex-row">
-      <aside className="sticky bottom-0 z-20 order-last flex w-full flex-none items-center justify-between gap-2 border-t bg-card px-4 py-2 sm:top-0 sm:bottom-auto sm:order-first sm:h-svh sm:w-22 sm:flex-col sm:justify-start sm:overflow-y-auto sm:border-t-0 sm:border-r sm:px-0 sm:py-5">
+      {/* Phones get a top bar and a slide-out menu: an admin has six
+          destinations plus an account block, which no bottom bar or 88px rail
+          can hold at that width. The rail returns from `sm` up. */}
+      <header className="sticky top-0 z-20 flex items-center gap-2 border-b bg-card px-2 py-2 sm:hidden">
+        <MobileNav
+          items={nav}
+          user={{ id: user.id, name: user.name, role: user.role }}
+          signOut={
+            <form action={logout}>
+              <button
+                type="submit"
+                className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted"
+              >
+                <Icons.logOut size={18} />
+                {SIGN_OUT_LABEL}
+              </button>
+            </form>
+          }
+        />
+        <span className="flex items-center gap-2 font-bold">
+          <span
+            className="grid size-7 flex-none place-items-center rounded-lg bg-primary text-sm font-extrabold text-primary-foreground"
+            aria-hidden="true"
+          >
+            C
+          </span>
+          Chomreab
+        </span>
+        <span className="ml-auto">
+          <InitialAvatar id={user.id} name={user.name} title={`${user.name} (${user.role})`} />
+        </span>
+      </header>
+
+      <aside className="sticky top-0 hidden h-svh w-22 flex-none flex-col items-center gap-2 overflow-y-auto border-r bg-card py-5 sm:flex">
         <div
-          className="hidden size-[38px] flex-none place-items-center rounded-lg bg-primary text-[17px] font-extrabold text-primary-foreground sm:mb-3.5 sm:grid"
+          className="mb-3.5 grid size-[38px] flex-none place-items-center rounded-lg bg-primary text-[17px] font-extrabold text-primary-foreground"
           aria-hidden="true"
           title="Chomreab"
         >
@@ -42,23 +80,19 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
         <DashboardNav items={nav} />
 
-        <div className="hidden flex-1 sm:block" />
+        <div className="flex-1" />
 
         {/* Signing out was an unlabelled icon that all but vanished against the
             rail in dark mode; it now reads as a destination like the nav items
             above it, and the account it signs out of is named next to it. */}
-        <div className="flex flex-none items-center gap-2 sm:w-full sm:flex-col sm:border-t sm:pt-3">
-          <InitialAvatar
-            id={user.id}
-            name={user.name}
-            title={`${user.name} (${user.role})`}
-          />
-          <p className="hidden w-full truncate px-1 text-center text-[10px] font-bold text-muted-foreground sm:block">
+        <div className="flex w-full flex-col items-center gap-2 border-t pt-3">
+          <InitialAvatar id={user.id} name={user.name} title={`${user.name} (${user.role})`} />
+          <p className="w-full truncate px-1 text-center text-[10px] font-bold text-muted-foreground">
             {user.name}
           </p>
           <Link
             href="/change-password"
-            className="flex min-w-[56px] flex-col items-center gap-1 rounded-lg py-2 text-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:w-[68px]"
+            className="flex w-[68px] flex-col items-center gap-1 rounded-lg py-2 text-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <Icons.key size={22} />
             <span className="text-[10px] leading-[1.15] font-bold">Password</span>
@@ -69,7 +103,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
               className="flex w-[68px] cursor-pointer flex-col items-center gap-1 rounded-lg py-2 text-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <Icons.logOut size={22} />
-              <span className="text-[10px] leading-[1.15] font-bold">Sign out</span>
+              <span className="text-[10px] leading-[1.15] font-bold">{SIGN_OUT_LABEL}</span>
             </button>
           </form>
         </div>
