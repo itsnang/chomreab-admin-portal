@@ -26,7 +26,7 @@ export function ChangeLog({ classroomId, date }: ChangeLogProps) {
   return (
     <div className="rounded-xl border bg-card p-4 shadow-card-sm">
       <div className="mb-2.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-        Change log
+        Audit log
       </div>
       {query.isPending || query.isError ? (
         <QueryState

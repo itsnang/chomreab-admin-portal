@@ -1,8 +1,6 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { PageShell } from '@/components/shared/page-shell'
@@ -10,39 +8,48 @@ import { QueryState } from '@/components/shared/query-state'
 import { StatusChip } from '@/components/shared/status-chip'
 import { EmptyState } from '@/components/shared/empty-state'
 import { ConfirmButton } from '@/components/shared/confirm-button'
-import { FormSheet } from '@/components/shared/form-sheet'
 import { SegmentedControl } from '@/components/shared/segmented-control'
+import { InitialAvatar } from '@/components/shared/initial-avatar'
 import { Icons } from '@/components/shared/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { InitialAvatar } from '@/components/shared/initial-avatar'
 import { cn } from '@/lib/utils'
 import { useClassrooms } from '@/features/classrooms/hooks/use-classrooms'
 import { useStudents, useLinkingStatus } from '../hooks/use-students'
-import { createStudent, deleteStudent } from '../actions'
-import { studentSchema, type StudentInput } from '../schemas'
+import { createStudent, updateStudent, setStudentStatus, deleteStudent } from '../actions'
+import type { Student } from '../types'
+import type { StudentInput } from '../schemas'
+import { StudentFormSheet } from './student-form-sheet'
 
 const ALL = 'all'
+const BLANK: StudentInput = { name: '', classroomId: '' }
+
+type Roll = 'active' | 'inactive'
+
+const ROLL_SEGMENTS = [
+  { value: 'active' as const, label: 'Enrolled' },
+  { value: 'inactive' as const, label: 'Left' },
+]
 
 export function StudentsScreen() {
   const [classFilter, setClassFilter] = useState<string>(ALL)
+  const [roll, setRoll] = useState<Roll>('active')
   const [search, setSearch] = useState('')
   const [addOpen, setAddOpen] = useState(false)
+  const [editing, setEditing] = useState<Student | null>(null)
 
   const classroomsQuery = useClassrooms()
-  // The API filters by classroom, so the chips drive the query rather than
-  // trimming a full list on the client.
-  const studentsQuery = useStudents(classFilter === ALL ? undefined : classFilter)
+  // The API filters by classroom and by roll, so the controls drive the query
+  // rather than trimming a full list on the client.
+  const studentsQuery = useStudents(
+    classFilter === ALL ? undefined : classFilter,
+    roll === 'inactive',
+  )
   const linkingQuery = useLinkingStatus()
   const queryClient = useQueryClient()
 
-  const form = useForm<StudentInput>({
-    resolver: zodResolver(studentSchema),
-    defaultValues: { name: '', classroomId: '' },
-  })
-
-  const classroomName = (id: string) => classroomsQuery.data?.find((c) => c.id === id)?.name ?? '—'
+  const classrooms = useMemo(() => classroomsQuery.data ?? [], [classroomsQuery.data])
+  const classroomName = (id: string) => classrooms.find((c) => c.id === id)?.name ?? '—'
 
   const linkingByStudent = useMemo(
     () => new Map((linkingQuery.data ?? []).map((l) => [l.studentId, l])),
@@ -51,98 +58,80 @@ export function StudentsScreen() {
   const linkedCount = (linkingQuery.data ?? []).filter((l) => l.linked).length
 
   const visibleStudents = useMemo(() => {
-    const students = studentsQuery.data ?? []
+    // `include_inactive` widens the list rather than replacing it, so the
+    // "Left" tab has to narrow it back down to just those students.
+    const students = (studentsQuery.data ?? []).filter((s) =>
+      roll === 'inactive' ? s.status === 'inactive' : s.status === 'active',
+    )
     const term = search.trim().toLowerCase()
     if (!term) return students
     return students.filter((s) => s.name.toLowerCase().includes(term))
-  }, [studentsQuery.data, search])
+  }, [studentsQuery.data, search, roll])
 
-  const onSubmit = async (values: StudentInput) => {
-    const result = await createStudent(values)
-    if (result.error) {
-      toast.error(result.error)
-      return
-    }
-    form.reset({ name: '', classroomId: '' })
-    setAddOpen(false)
-    toast.success(`${values.name} added.`)
-    await queryClient.invalidateQueries({ queryKey: ['students'] })
-  }
-
-  const onDelete = async (id: string, name: string) => {
-    const result = await deleteStudent(id)
-    if (result.error) {
-      toast.error(result.error)
-      return
-    }
-    toast.success(`${name} removed.`)
-    await Promise.all([
+  const refresh = () =>
+    Promise.all([
       queryClient.invalidateQueries({ queryKey: ['students'] }),
       queryClient.invalidateQueries({ queryKey: ['linking-status'] }),
     ])
+
+  const onAdd = async (values: StudentInput) => {
+    const result = await createStudent(values)
+    if (result.error) return void toast.error(result.error)
+    setAddOpen(false)
+    toast.success(`${values.name} added.`)
+    await refresh()
   }
 
-  const noClassrooms = (classroomsQuery.data?.length ?? 0) === 0
+  const onEdit = async (values: StudentInput) => {
+    if (!editing) return
+    const result = await updateStudent(editing.id, values)
+    if (result.error) return void toast.error(result.error)
+    setEditing(null)
+    toast.success(`${values.name} updated.`)
+    await refresh()
+  }
+
+  const onSetStatus = async (student: Student, status: Student['status']) => {
+    const result = await setStudentStatus(student.id, status)
+    if (result.error) return void toast.error(result.error)
+    toast.success(
+      status === 'inactive'
+        ? `${student.name} marked as left.`
+        : `${student.name} is enrolled again.`,
+    )
+    await refresh()
+  }
+
+  const onDelete = async (student: Student) => {
+    const result = await deleteStudent(student.id)
+    if (result.error) return void toast.error(result.error)
+    toast.success(`${student.name} deleted.`)
+    await refresh()
+  }
+
+  const noClassrooms = classrooms.length === 0
 
   return (
     <PageShell
       heading="Students"
       description="Add students and keep them assigned to the right classroom."
       actions={
-        <Form {...form}>
-          <FormSheet
-            open={addOpen}
-            onOpenChange={setAddOpen}
-            trigger={
-              <Button disabled={noClassrooms}>
-                <Icons.plus />
-                Add student
-              </Button>
-            }
-            title="Add a student"
-            description="They appear on their classroom's roster straight away."
-            submitLabel="Add student"
-            isSubmitting={form.formState.isSubmitting}
-            onSubmit={form.handleSubmit(onSubmit)}
-          >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Sokha" autoComplete="off" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="classroomId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Classroom</FormLabel>
-                  <FormControl>
-                    <select
-                      className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                      {...field}
-                    >
-                      <option value="">Select a classroom</option>
-                      {classroomsQuery.data?.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </FormSheet>
-        </Form>
+        <StudentFormSheet
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          trigger={
+            <Button disabled={noClassrooms}>
+              <Icons.plus />
+              Add student
+            </Button>
+          }
+          title="Add a student"
+          description="They appear on their classroom's roster straight away."
+          submitLabel="Add student"
+          classrooms={classrooms}
+          defaultValues={BLANK}
+          onSubmit={onAdd}
+        />
       }
       toolbar={
         <div className="flex flex-wrap items-center gap-3">
@@ -150,12 +139,19 @@ export function StudentsScreen() {
             aria-label="Filter by classroom"
             segments={[
               { value: ALL, label: 'All classrooms' },
-              ...(classroomsQuery.data ?? []).map((c) => ({ value: c.id, label: c.name })),
+              ...classrooms.map((c) => ({ value: c.id, label: c.name })),
             ]}
             value={classFilter}
             onChange={setClassFilter}
             size="sm"
             className="flex-wrap"
+          />
+          <SegmentedControl
+            aria-label="Enrolled or left"
+            segments={ROLL_SEGMENTS}
+            value={roll}
+            onChange={setRoll}
+            size="sm"
           />
           <Input
             value={search}
@@ -167,10 +163,26 @@ export function StudentsScreen() {
         </div>
       }
     >
+      {/* One edit sheet reused across rows; `editing` supplies its values. */}
+      <StudentFormSheet
+        open={editing !== null}
+        onOpenChange={(open) => !open && setEditing(null)}
+        title={`Edit ${editing?.name ?? 'student'}`}
+        description="Renaming or moving a student leaves their attendance history where it happened."
+        submitLabel="Save changes"
+        classrooms={classrooms}
+        defaultValues={
+          editing ? { name: editing.name, classroomId: editing.classroomId } : BLANK
+        }
+        onSubmit={onEdit}
+      />
+
       <div className="flex gap-3">
         <div className="min-w-[140px] rounded-xl border bg-card px-5 py-4 shadow-card-sm">
           <div className="font-mono text-[28px] font-semibold">{visibleStudents.length}</div>
-          <div className="mt-1 text-xs text-muted-foreground">Students shown</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {roll === 'inactive' ? 'Students shown (left)' : 'Students shown'}
+          </div>
         </div>
         <div className="min-w-[140px] rounded-xl border bg-card px-5 py-4 shadow-card-sm">
           <div className="font-mono text-[28px] font-semibold text-present">
@@ -192,49 +204,84 @@ export function StudentsScreen() {
           {visibleStudents.length === 0 ? (
             <EmptyState
               icon={<Icons.graduationCap />}
-              title={search.trim() ? 'No matching students' : 'No students here yet'}
+              title={
+                search.trim()
+                  ? 'No matching students'
+                  : roll === 'inactive'
+                    ? 'Nobody has left'
+                    : 'No students here yet'
+              }
               description={
                 search.trim()
                   ? `Nothing matches “${search.trim()}”.`
-                  : noClassrooms
-                    ? 'Create a classroom first — every student belongs to one.'
-                    : 'Add a student to this classroom to get started.'
+                  : roll === 'inactive'
+                    ? 'Students you mark as left appear here, with their history intact.'
+                    : noClassrooms
+                      ? 'Create a classroom first — every student belongs to one.'
+                      : 'Add a student to this classroom to get started.'
               }
-              {...(search.trim() || noClassrooms
+              {...(search.trim() || noClassrooms || roll === 'inactive'
                 ? {}
                 : { action: <Button onClick={() => setAddOpen(true)}>Add a student</Button> })}
             />
           ) : (
             visibleStudents.map((s, i) => {
               const linking = linkingByStudent.get(s.id)
+              const left = s.status === 'inactive'
               return (
                 <div
                   key={s.id}
                   className={cn('flex items-center gap-3 px-5 py-3.5', i > 0 && 'border-t')}
                 >
-                  <InitialAvatar id={s.id} name={s.name} />
+                  <InitialAvatar id={s.id} name={s.name} className={cn(left && 'opacity-50')} />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-bold">{s.name}</div>
                     <div className="truncate text-xs text-muted-foreground">
                       {classroomName(s.classroomId)}
                     </div>
                   </div>
-                  {/* Codes are issued and copied on the Linking codes page; the
-                      chip here is a read-only summary. */}
-                  {linkingQuery.isPending || linkingQuery.isError ? (
+
+                  {left ? (
+                    <StatusChip status="inactive" label="Left" />
+                  ) : linkingQuery.isPending || linkingQuery.isError ? (
                     <StatusChip status="checking" />
                   ) : (
                     <StatusChip status={linking?.linked ? 'linked' : 'unlinked'} />
                   )}
+
+                  <Button variant="ghost" size="sm" onClick={() => setEditing(s)}>
+                    <Icons.pencil />
+                    Edit
+                  </Button>
+
+                  {left ? (
+                    <Button variant="outline" size="sm" onClick={() => void onSetStatus(s, 'active')}>
+                      Re-enrol
+                    </Button>
+                  ) : (
+                    <ConfirmButton
+                      variant="outline"
+                      title={`Mark ${s.name} as left?`}
+                      description="They come off every roster and stop being counted, and their attendance history stays readable. You can re-enrol them later."
+                      confirmLabel="Mark as left"
+                      onConfirm={() => void onSetStatus(s, 'inactive')}
+                    >
+                      Mark as left
+                    </ConfirmButton>
+                  )}
+
+                  {/* Hard delete is for a student entered twice, not for one who
+                      has left — it orphans their attendance history. */}
                   <ConfirmButton
                     destructive
-                    title={`Remove ${s.name}?`}
-                    description="They come off every roster. Past attendance records are kept."
-                    confirmLabel="Remove student"
-                    onConfirm={() => void onDelete(s.id, s.name)}
+                    size="icon-sm"
+                    aria-label={`Delete ${s.name}`}
+                    title={`Permanently delete ${s.name}?`}
+                    description="This is for a record entered by mistake. Their attendance history, audit trail and parent link are left pointing at a student who no longer exists, and will show as “Unknown student”. To remove a child who has left, mark them as left instead."
+                    confirmLabel="Delete permanently"
+                    onConfirm={() => void onDelete(s)}
                   >
                     <Icons.trash2 />
-                    Remove
                   </ConfirmButton>
                 </div>
               )

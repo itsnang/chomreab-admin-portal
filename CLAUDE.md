@@ -52,6 +52,7 @@ src/features/<domain>/
 **Dependency direction:** Slices must not import from each other. Import from `@/components/shared/` or `@/lib/` for shared code. Exceptions:
 - `students` slice → imports `useClassrooms` from `classrooms` (classroom picker + name lookup on the students list)
 - `attendance` slice → imports `useClassrooms` from `classrooms` (classroom picker for the roster)
+- `classrooms` slice → imports `useTeachers` from `staff` (teacher picker when assigning a classroom)
 
 **Shared presentational components** live in `src/components/shared/` — used across slices, must not import from any feature slice: `page-shell.tsx`, `status-chip.tsx`, `form-controls.tsx`, `query-state.tsx`, `drawer-sheet.tsx`, `theme-toggle.tsx`, `navigation-progress.tsx`, `icons.tsx`, `thumb.tsx`.
 

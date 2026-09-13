@@ -30,21 +30,21 @@ export function ClassRail({
   return (
     <div className="h-fit rounded-xl border bg-card p-4 shadow-card-sm">
       <div className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-        My classes today
+        My classrooms today
       </div>
 
       {isPending || isError ? (
         <QueryState
           isPending={isPending}
-          message="Couldn't load your classes."
+          message="Couldn't load your classrooms."
           onRetry={onRetry}
           className="py-8"
         />
       ) : classes && classes.length === 0 ? (
         <EmptyState
           icon={<Icons.graduationCap />}
-          title="No classes assigned"
-          description="An admin needs to assign you to a class before you can take attendance."
+          title="No classrooms assigned"
+          description="An admin needs to assign you to a classroom before you can take attendance."
           className="px-0 py-8"
         />
       ) : (

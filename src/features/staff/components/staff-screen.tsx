@@ -12,6 +12,7 @@ import { ConfirmButton } from '@/components/shared/confirm-button'
 import { FormSheet } from '@/components/shared/form-sheet'
 import { TempPasswordPanel, type CreatedTeacherCredentials } from './temp-password-panel'
 import { Icons } from '@/components/shared/icons'
+import { SelectField } from '@/components/shared/select-field'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -19,8 +20,9 @@ import { InitialAvatar } from '@/components/shared/initial-avatar'
 import { cn } from '@/lib/utils'
 import { useClassrooms } from '@/features/classrooms/hooks/use-classrooms'
 import { useTeachers } from '../hooks/use-staff'
-import { createTeacher, deleteTeacher } from '../actions'
+import { createTeacher, updateTeacher, resetTeacherPassword, deleteTeacher } from '../actions'
 import { teacherSchema, type TeacherInput } from '../schemas'
+import type { Teacher } from '../types'
 
 export function StaffScreen() {
   const classroomsQuery = useClassrooms()
@@ -28,6 +30,50 @@ export function StaffScreen() {
   const queryClient = useQueryClient()
   const [addOpen, setAddOpen] = useState(false)
   const [credentials, setCredentials] = useState<CreatedTeacherCredentials | null>(null)
+  const [editing, setEditing] = useState<Teacher | null>(null)
+  const [resettingId, setResettingId] = useState<string | null>(null)
+
+  const editForm = useForm<TeacherInput>({
+    resolver: zodResolver(teacherSchema),
+    defaultValues: { name: '', email: '', classroomId: '' },
+  })
+
+  const openEdit = (teacher: Teacher) => {
+    setEditing(teacher)
+    editForm.reset({ name: teacher.name, email: teacher.email, classroomId: '' })
+  }
+
+  const onEdit = async (values: TeacherInput) => {
+    if (!editing) return
+    const result = await updateTeacher(editing.id, {
+      name: values.name,
+      email: values.email,
+    })
+    if (result.error) {
+      toast.error(result.error)
+      return
+    }
+    setEditing(null)
+    toast.success(`${values.name} updated.`)
+    await queryClient.invalidateQueries({ queryKey: ['teachers'] })
+  }
+
+  const onResetPassword = async (teacher: Teacher) => {
+    setResettingId(teacher.id)
+    const result = await resetTeacherPassword(teacher.id)
+    setResettingId(null)
+    if (result.error) {
+      toast.error(result.error)
+      return
+    }
+    // Same one-time panel as account creation — the password is shown once and
+    // only its hash is stored.
+    setCredentials({
+      name: teacher.name,
+      password: result.temporaryPassword ?? '',
+      classroomAssignmentFailed: false,
+    })
+  }
 
   const form = useForm<TeacherInput>({
     resolver: zodResolver(teacherSchema),
@@ -117,17 +163,14 @@ export function StaffScreen() {
                 <FormItem>
                   <FormLabel>Classroom</FormLabel>
                   <FormControl>
-                    <select
-                      className="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                      {...field}
-                    >
+                    <SelectField {...field}>
                       <option value="">Unassigned</option>
                       {classroomsQuery.data?.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name}
                         </option>
                       ))}
-                    </select>
+                    </SelectField>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -137,6 +180,45 @@ export function StaffScreen() {
         </Form>
       }
     >
+
+      <Form {...editForm}>
+        <FormSheet
+          open={editing !== null}
+          onOpenChange={(open) => !open && setEditing(null)}
+          title={`Edit ${editing?.name ?? 'teacher'}`}
+          description="Email is their sign-in, so changing it changes how they log in. Their current session stays active."
+          submitLabel="Save changes"
+          isSubmitting={editForm.formState.isSubmitting}
+          onSubmit={editForm.handleSubmit(onEdit)}
+        >
+          <FormField
+            control={editForm.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Chenda Ly" autoComplete="off" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={editForm.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="chenda@school.edu" autoComplete="off" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </FormSheet>
+      </Form>
 
       {teachersQuery.isPending || teachersQuery.isError ? (
         <QueryState
@@ -151,7 +233,7 @@ export function StaffScreen() {
             <EmptyState
               icon={<Icons.users />}
               title="No teacher accounts yet"
-              description="Add a teacher so they can sign in and mark their classes."
+              description="Add a teacher so they can sign in and mark their classrooms."
               action={<Button onClick={() => setAddOpen(true)}>Add a teacher</Button>}
             />
           ) : (
@@ -168,15 +250,31 @@ export function StaffScreen() {
                 <div className="w-[200px] truncate text-xs text-muted-foreground">
                   {t.classroomNames.length > 0 ? t.classroomNames.join(', ') : 'Unassigned'}
                 </div>
+                <Button variant="ghost" size="sm" onClick={() => openEdit(t)}>
+                  <Icons.pencil />
+                  Edit
+                </Button>
+                <ConfirmButton
+                  variant="outline"
+                  disabled={resettingId === t.id}
+                  title={`Reset ${t.name}'s password?`}
+                  description="Issues a new temporary password, shown to you once. Their current password stops working immediately and they are signed out everywhere."
+                  confirmLabel="Reset password"
+                  onConfirm={() => void onResetPassword(t)}
+                >
+                  <Icons.key />
+                  Reset password
+                </ConfirmButton>
                 <ConfirmButton
                   destructive
+                  size="icon-sm"
+                  aria-label={`Remove ${t.name}`}
                   title={`Remove ${t.name}?`}
                   description="Their account is deleted and they lose access immediately. Attendance they recorded is kept."
                   confirmLabel="Remove teacher"
                   onConfirm={() => void onDelete(t.id, t.name)}
                 >
                   <Icons.trash2 />
-                  Remove
                 </ConfirmButton>
               </div>
             ))

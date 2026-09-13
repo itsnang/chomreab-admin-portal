@@ -29,7 +29,7 @@ const STATS = [
 export function AttendanceScreen() {
   const [date, setDate] = useState(today())
   const [classroomId, setClassroomId] = useState('')
-  // Staged marks are kept per class *and* per day, so stepping back to check
+  // Staged marks are kept per classroom *and* per day, so stepping back to check
   // yesterday and returning doesn't throw away unsaved work.
   const [stagedByContext, setStagedByContext] = useState<
     Record<string, Record<string, StagedMark>>
@@ -155,8 +155,8 @@ export function AttendanceScreen() {
             <div className="rounded-xl border bg-card shadow-card-sm">
               <EmptyState
                 icon={<Icons.clipboardCheck />}
-                title="Pick a class"
-                description="Choose one of your classes to see its roster for the day."
+                title="Pick a classroom"
+                description="Choose one of your classrooms to see its roster for the day."
               />
             </div>
           ) : rosterQuery.isPending || rosterQuery.isError ? (
@@ -174,7 +174,7 @@ export function AttendanceScreen() {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="mb-1.5 text-[11px] font-bold tracking-wide text-primary uppercase">
-                      {isToday(date) ? "Today's class" : formatWeekday(date)}
+                      {isToday(date) ? "Today's classroom" : formatWeekday(date)}
                     </div>
                     <div className="truncate text-[34px] leading-none font-extrabold tracking-tight">
                       {activeClass?.name ?? 'Class'}
@@ -210,7 +210,7 @@ export function AttendanceScreen() {
                 {roster.length === 0 ? (
                   <EmptyState
                     icon={<Icons.graduationCap />}
-                    title="No students in this class"
+                    title="No students in this classroom"
                     description="Ask an admin to add students before marking attendance."
                   />
                 ) : (

@@ -16,10 +16,51 @@ function toStudent(api: StudentApi): Student {
   return { id: api.id, name: api.name, classroomId: api.classroom_id, status: api.status }
 }
 
-export async function listStudents(classroomId?: string): Promise<Student[]> {
-  const query = classroomId ? `?classroom_id=${classroomId}` : ''
-  const items = await apiFetch<StudentApi[]>(`/students${query}`)
+export async function listStudents(
+  classroomId?: string,
+  includeInactive = false,
+): Promise<Student[]> {
+  const params = new URLSearchParams()
+  if (classroomId) params.set('classroom_id', classroomId)
+  if (includeInactive) params.set('include_inactive', 'true')
+  const query = params.toString()
+  const items = await apiFetch<StudentApi[]>(`/students${query ? `?${query}` : ''}`)
   return items.map(toStudent)
+}
+
+export async function updateStudent(
+  id: string,
+  input: StudentInput,
+): Promise<{ error?: string }> {
+  try {
+    await apiFetch(`/students/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name: input.name, classroom_id: input.classroomId }),
+    })
+  } catch (e) {
+    return { error: e instanceof ApiError ? e.message : 'Failed to update student' }
+  }
+  revalidatePath('/students')
+  return {}
+}
+
+/** Deactivating is how a student leaves. It keeps their attendance history
+ *  readable, which deleting them does not — nothing cascades, so a deleted
+ *  student's records survive pointing at nobody. */
+export async function setStudentStatus(
+  id: string,
+  status: Student['status'],
+): Promise<{ error?: string }> {
+  try {
+    await apiFetch(`/students/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    })
+  } catch (e) {
+    return { error: e instanceof ApiError ? e.message : 'Failed to update student' }
+  }
+  revalidatePath('/students')
+  return {}
 }
 
 export async function createStudent(input: StudentInput): Promise<{ error?: string }> {

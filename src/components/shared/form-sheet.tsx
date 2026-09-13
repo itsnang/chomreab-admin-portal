@@ -15,8 +15,9 @@ import { Button } from '@/components/ui/button'
 interface FormSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  /** The button that opens the sheet. */
-  trigger: ReactNode
+  /** The button that opens the sheet. Omit for a sheet opened from a row
+   *  action, where the caller drives `open` directly. */
+  trigger?: ReactNode
   title: string
   description?: string
   submitLabel: string
@@ -48,7 +49,7 @@ export function FormSheet({
 }: FormSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetTrigger asChild>{trigger}</SheetTrigger>
+      {trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
       <SheetContent side="right" className="flex w-full flex-col sm:max-w-md">
         <form onSubmit={onSubmit} noValidate className="flex min-h-0 flex-1 flex-col">
           <SheetHeader>
