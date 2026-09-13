@@ -30,10 +30,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const nav = user.role === 'admin' ? ADMIN_NAV : TEACHER_NAV
 
   return (
-    <div className="flex min-h-svh bg-background">
-      <aside className="sticky top-0 flex h-svh w-22 flex-none flex-col items-center gap-2 overflow-y-auto border-r bg-card py-5">
+    <div className="flex min-h-svh flex-col bg-background sm:flex-row">
+      <aside className="sticky bottom-0 z-20 order-last flex w-full flex-none items-center justify-between gap-2 border-t bg-card px-4 py-2 sm:top-0 sm:bottom-auto sm:order-first sm:h-svh sm:w-22 sm:flex-col sm:justify-start sm:overflow-y-auto sm:border-t-0 sm:border-r sm:px-0 sm:py-5">
         <div
-          className="mb-3.5 grid size-[38px] flex-none place-items-center rounded-lg bg-primary text-[17px] font-extrabold text-primary-foreground"
+          className="hidden size-[38px] flex-none place-items-center rounded-lg bg-primary text-[17px] font-extrabold text-primary-foreground sm:mb-3.5 sm:grid"
           aria-hidden="true"
           title="Chomreab"
         >
@@ -42,23 +42,23 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
         <DashboardNav items={nav} />
 
-        <div className="flex-1" />
+        <div className="hidden flex-1 sm:block" />
 
         {/* Signing out was an unlabelled icon that all but vanished against the
             rail in dark mode; it now reads as a destination like the nav items
             above it, and the account it signs out of is named next to it. */}
-        <div className="flex w-full flex-col items-center gap-2 border-t pt-3">
+        <div className="flex flex-none items-center gap-2 sm:w-full sm:flex-col sm:border-t sm:pt-3">
           <InitialAvatar
             id={user.id}
             name={user.name}
             title={`${user.name} (${user.role})`}
           />
-          <p className="w-full truncate px-1 text-center text-[10px] font-bold text-muted-foreground">
+          <p className="hidden w-full truncate px-1 text-center text-[10px] font-bold text-muted-foreground sm:block">
             {user.name}
           </p>
           <Link
             href="/change-password"
-            className="flex w-[68px] flex-col items-center gap-1 rounded-lg py-2 text-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex min-w-[56px] flex-col items-center gap-1 rounded-lg py-2 text-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:w-[68px]"
           >
             <Icons.key size={22} />
             <span className="text-[10px] leading-[1.15] font-bold">Password</span>

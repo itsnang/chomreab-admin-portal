@@ -56,7 +56,10 @@ export function SegmentedControl<T extends string>({
               'focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none',
               'disabled:pointer-events-none disabled:opacity-60',
               stretch && 'flex-1',
-              size === 'sm' ? 'px-3 py-1.5 text-xs' : 'px-3 py-2 text-[13px]',
+              // Tight enough that three stretched segments fit a phone row.
+              size === 'sm'
+                ? 'px-2 py-1.5 text-xs sm:px-3'
+                : 'px-2 py-2 text-xs sm:px-3 sm:text-[13px]',
               selected
                 ? cn(TONE_BORDER[tone], TONE_MUTED_BG[tone], TONE_TEXT[tone])
                 : 'border-border bg-card text-muted-foreground hover:bg-muted'

@@ -41,7 +41,7 @@ export function RosterRow({ entry, staged, onStage, disabled }: RosterRowProps) 
     <div className={cn('border-b px-5 py-3 last:border-b-0', dirty && 'bg-primary/[0.04]')}>
       <div className="flex flex-wrap items-center gap-3">
         <InitialAvatar id={entry.studentId} name={entry.studentName} size="sm" />
-        <div className="min-w-[150px] flex-1">
+        <div className="min-w-[120px] flex-1">
           <div className="truncate text-[15px] font-bold">{entry.studentName}</div>
           <div className="text-xs text-muted-foreground">
             {dirty ? 'Unsaved' : status ? 'Saved' : 'Not marked yet'}
@@ -54,7 +54,7 @@ export function RosterRow({ entry, staged, onStage, disabled }: RosterRowProps) 
           onChange={(next) => onStage(next, note)}
           disabled={disabled}
           stretch
-          className="min-w-[180px] flex-1"
+          className="w-full sm:w-auto sm:min-w-[180px] sm:flex-1"
         />
         <div className="flex-none">
           <Button

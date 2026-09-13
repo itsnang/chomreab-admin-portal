@@ -10,6 +10,7 @@ import { StatTile } from '@/components/shared/stat-tile'
 import { ConfirmButton } from '@/components/shared/confirm-button'
 import { Icons } from '@/components/shared/icons'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { addDays, formatWeekday, isToday, today } from '@/lib/format/date'
 import { useMyClasses, useRoster } from '../hooks/use-attendance'
 import { saveRoster } from '../actions'
@@ -192,9 +193,18 @@ export function AttendanceScreen() {
                     Mark all present
                   </ConfirmButton>
                 </div>
-                <div className="mt-5 flex border-t pt-4">
+                {/* Four tiles needed 314px in a 189px row on a phone, pushing
+                    "Unmarked" outside its own card. Two-up until there's room. */}
+                <div className="mt-5 grid grid-cols-2 gap-y-4 border-t pt-4 sm:flex">
                   {STATS.map((stat, i) => (
-                    <div key={stat.key} className={i > 0 ? 'flex-1 border-l px-4' : 'flex-1 px-4'}>
+                    <div
+                      key={stat.key}
+                      className={cn(
+                        'px-4 sm:flex-1',
+                        i % 2 === 1 && 'border-l',
+                        i > 0 && 'sm:border-l',
+                      )}
+                    >
                       <StatTile
                         icon={stat.icon}
                         tone={stat.tone}

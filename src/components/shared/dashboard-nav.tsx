@@ -14,7 +14,7 @@ interface NavItem {
 export function DashboardNav({ items }: { items: readonly NavItem[] }) {
   const pathname = usePathname()
   return (
-    <nav className="flex w-full flex-col items-center gap-2">
+    <nav className="flex w-full items-center justify-around gap-2 sm:flex-col sm:justify-start">
       {items.map((item) => {
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
         const Icon = Icons[item.icon]
@@ -25,7 +25,7 @@ export function DashboardNav({ items }: { items: readonly NavItem[] }) {
             aria-label={item.label}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'flex w-[68px] flex-col items-center gap-1 rounded-lg py-2 text-center transition-colors',
+              'flex min-w-[68px] flex-col items-center gap-1 rounded-lg py-2 text-center transition-colors',
               active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
             )}
           >
