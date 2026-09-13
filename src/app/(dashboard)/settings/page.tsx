@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { SettingsScreen } from '@/features/settings/components/settings-screen'
 
-export const metadata: Metadata = { title: 'Settings — Attendance' }
+export const metadata: Metadata = { title: 'Settings — Chomreab' }
 
 export default function SettingsPage() {
   return <SettingsScreen />

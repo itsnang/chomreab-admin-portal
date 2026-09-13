@@ -39,9 +39,9 @@ export function LoginScreen() {
           className="grid size-8 flex-none place-items-center rounded-lg bg-primary text-base font-extrabold text-primary-foreground"
           aria-hidden="true"
         >
-          R
+          C
         </div>
-        <span className="text-[17px] font-bold">Rollcall</span>
+        <span className="text-[17px] font-bold">Chomreab</span>
       </div>
 
       <div className="w-full max-w-sm rounded-xl border bg-card px-7 py-8 shadow-card">

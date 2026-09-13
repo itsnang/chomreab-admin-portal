@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/features/auth/actions'
 import { ChangePasswordScreen } from '@/features/auth/components/change-password-screen'
 
-export const metadata: Metadata = { title: 'Change password — Rollcall' }
+export const metadata: Metadata = { title: 'Change password — Chomreab' }
 
 // Lives in the (auth) group rather than (dashboard): a user sent here because
 // of a temporary password must not reach the nav, and there is nothing on this

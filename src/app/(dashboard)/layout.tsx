@@ -35,9 +35,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         <div
           className="mb-3.5 grid size-[38px] flex-none place-items-center rounded-lg bg-primary text-[17px] font-extrabold text-primary-foreground"
           aria-hidden="true"
-          title="Rollcall"
+          title="Chomreab"
         >
-          R
+          C
         </div>
 
         <DashboardNav items={nav} />

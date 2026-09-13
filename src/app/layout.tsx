@@ -4,7 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Attendance",
+  title: 'Chomreab',
   description: "School/tutoring-center attendance admin & teacher dashboard",
 };
 
