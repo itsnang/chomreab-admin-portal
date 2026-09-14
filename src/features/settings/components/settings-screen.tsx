@@ -8,23 +8,31 @@ import { useQueryClient } from '@tanstack/react-query'
 import { PageShell } from '@/components/shared/page-shell'
 import { QueryState } from '@/components/shared/query-state'
 import { StatusChip } from '@/components/shared/status-chip'
+import { SectionHeader } from '@/components/shared/section-header'
+import { Icons } from '@/components/shared/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { cn } from '@/lib/utils'
 import { useSchoolSettings } from '../hooks/use-settings'
 import { updateSchoolSettings } from '../actions'
 import { settingsSchema, type SettingsInput } from '../schemas'
 
+const FIELD_CLASS = 'h-11 rounded-lg bg-background px-3.5'
+const CARD_CLASS = 'rounded-xl border bg-card p-4 shadow-card-sm'
+
 export function SettingsScreen() {
   const query = useSchoolSettings()
   const queryClient = useQueryClient()
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [showToken, setShowToken] = useState(false)
 
   const form = useForm<SettingsInput>({
     resolver: zodResolver(settingsSchema),
     defaultValues: { schoolName: '', lateCutoffMinutes: 15, absenceMessageTemplate: '', telegramBotToken: '' },
   })
+  const {
+    formState: { isDirty, isSubmitting },
+  } = form
 
   useEffect(() => {
     if (query.data) {
@@ -38,16 +46,14 @@ export function SettingsScreen() {
   }, [query.data, form])
 
   const onSubmit = async (values: SettingsInput) => {
-    setIsSubmitting(true)
     const result = await updateSchoolSettings(values)
-    setIsSubmitting(false)
     if (result.error) {
       toast.error(result.error)
       return
     }
     toast.success('Settings saved')
-    form.setValue('telegramBotToken', '')
     await queryClient.invalidateQueries({ queryKey: ['school-settings'] })
+    form.reset({ ...values, telegramBotToken: '' })
   }
 
   if (query.isPending || query.isError) {
@@ -61,9 +67,9 @@ export function SettingsScreen() {
   return (
     <PageShell heading="Settings" description="School details, notifications, and the Telegram bot.">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4 max-w-[640px]">
-          <div className="rounded-xl p-5" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
-            <div className="text-base font-extrabold mb-3.5">School</div>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-3.5 max-w-[640px]">
+          <div className={CARD_CLASS}>
+            <SectionHeader icon={Icons.user} title="School" subtitle="Your school's name" />
             <FormField
               control={form.control}
               name="schoolName"
@@ -71,7 +77,7 @@ export function SettingsScreen() {
                 <FormItem>
                   <FormLabel>School name</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} className={FIELD_CLASS} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -79,8 +85,8 @@ export function SettingsScreen() {
             />
           </div>
 
-          <div className="rounded-xl p-5" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
-            <div className="text-base font-extrabold mb-3.5">Notifications</div>
+          <div className={CARD_CLASS}>
+            <SectionHeader icon={Icons.clock} title="Notifications" subtitle="Late cutoff & absence messages" />
             <FormField
               control={form.control}
               name="lateCutoffMinutes"
@@ -88,7 +94,7 @@ export function SettingsScreen() {
                 <FormItem>
                   <FormLabel>Late cutoff (minutes after class start)</FormLabel>
                   <FormControl>
-                    <Input type="number" className="w-[100px]" {...field} />
+                    <Input type="number" className={`${FIELD_CLASS} w-[100px]`} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -104,11 +110,10 @@ export function SettingsScreen() {
                     <textarea
                       {...field}
                       rows={3}
-                      className="w-full rounded-md border px-3 py-2 text-sm resize-none"
-                      style={{ borderColor: 'var(--hn-line)', background: 'var(--hn-surface-2)' }}
+                      className="w-full resize-none rounded-lg border bg-background px-3.5 py-3 text-sm"
                     />
                   </FormControl>
-                  <p className="text-xs mt-1" style={{ color: 'var(--hn-sub)' }}>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Use <code>{'{{student_name}}'}</code> to insert the student&apos;s name.
                   </p>
                   <FormMessage />
@@ -117,14 +122,18 @@ export function SettingsScreen() {
             />
           </div>
 
-          <div className="rounded-xl p-5" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
-            <div className="flex items-center gap-2.5 mb-3.5">
-              <div className="text-base font-extrabold flex-1">Telegram bot</div>
-              <StatusChip
-                status={query.data.telegramBotTokenSet ? 'linked' : 'unlinked'}
-                label={query.data.telegramBotTokenSet ? 'Connected' : 'Not set'}
-              />
-            </div>
+          <div className={CARD_CLASS}>
+            <SectionHeader
+              icon={Icons.send}
+              title="Telegram bot"
+              subtitle="Sends attendance notifications to parents"
+              right={
+                <StatusChip
+                  status={query.data.telegramBotTokenSet ? 'linked' : 'unlinked'}
+                  label={query.data.telegramBotTokenSet ? 'Connected' : 'Not set'}
+                />
+              }
+            />
             <FormField
               control={form.control}
               name="telegramBotToken"
@@ -137,14 +146,14 @@ export function SettingsScreen() {
                         {...field}
                         type={showToken ? 'text' : 'password'}
                         placeholder={query.data.telegramBotTokenSet ? '••••••••••••' : 'Paste a new token'}
-                        className="flex-1 font-mono"
+                        className={`${FIELD_CLASS} flex-1 font-mono`}
                       />
                     </FormControl>
                     <Button type="button" variant="outline" size="sm" onClick={() => setShowToken((v) => !v)}>
                       {showToken ? 'Hide' : 'Show'}
                     </Button>
                   </div>
-                  <p className="text-xs mt-1" style={{ color: 'var(--hn-sub)' }}>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Leave blank to keep the current token.
                   </p>
                   <FormMessage />
@@ -153,13 +162,31 @@ export function SettingsScreen() {
             />
           </div>
 
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting}>
-              Save settings
-            </Button>
-          </div>
+          <SaveButton pending={isSubmitting} dirty={isDirty} label="Save settings" />
         </form>
       </Form>
     </PageShell>
+  )
+}
+
+/** Reads as a status as much as a control: clay while there is something to
+ *  save, a quiet "Saved" outline once the form is clean again. */
+function SaveButton({ pending, dirty, label }: { pending: boolean; dirty: boolean; label: string }) {
+  const active = dirty || pending
+  return (
+    <button
+      type="submit"
+      disabled={pending || !dirty}
+      className={cn(
+        'mt-1 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border text-sm font-bold transition-colors disabled:cursor-default',
+        active
+          ? 'border-transparent bg-primary text-primary-foreground'
+          : 'border-border bg-transparent text-present',
+        pending && 'opacity-75'
+      )}
+    >
+      {pending ? <Icons.loader2 size={17} className="animate-spin" /> : <Icons.check size={17} />}
+      {pending ? 'Saving…' : dirty ? label : 'Saved'}
+    </button>
   )
 }

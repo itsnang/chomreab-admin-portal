@@ -3,10 +3,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { listStudents, getLinkingStatus } from '../actions'
 
-export function useStudents(classroomId?: string) {
+export function useStudents(classroomId?: string, includeInactive = false) {
   return useQuery({
-    queryKey: ['students', classroomId ?? 'all'],
-    queryFn: () => listStudents(classroomId),
+    queryKey: ['students', classroomId ?? 'all', includeInactive],
+    queryFn: () => listStudents(classroomId, includeInactive),
   })
 }
 

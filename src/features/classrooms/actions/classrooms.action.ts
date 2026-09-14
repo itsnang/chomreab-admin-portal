@@ -34,6 +34,26 @@ export async function createClassroom(input: ClassroomInput): Promise<{ error?: 
   return {}
 }
 
+export async function updateClassroom(
+  id: string,
+  input: ClassroomInput,
+): Promise<{ error?: string }> {
+  try {
+    await apiFetch(`/classrooms/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        name: input.name,
+        grade_label: input.gradeLabel || null,
+        teacher_id: input.teacherId || null,
+      }),
+    })
+  } catch (e) {
+    return { error: e instanceof ApiError ? e.message : 'Failed to update classroom' }
+  }
+  revalidatePath('/classrooms')
+  return {}
+}
+
 export async function deleteClassroom(id: string): Promise<{ error?: string }> {
   try {
     await apiFetch(`/classrooms/${id}`, { method: 'DELETE' })

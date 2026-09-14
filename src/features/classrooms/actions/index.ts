@@ -1,1 +1,6 @@
-export { listClassrooms, createClassroom, deleteClassroom } from './classrooms.action'
+export {
+  listClassrooms,
+  createClassroom,
+  updateClassroom,
+  deleteClassroom,
+} from './classrooms.action'

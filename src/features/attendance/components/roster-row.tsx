@@ -2,91 +2,99 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { avatarColor, initials } from '@/lib/avatar'
-import type { AttendanceStatus, RosterEntry } from '../types'
+import { SegmentedControl, type Segment } from '@/components/shared/segmented-control'
+import { InitialAvatar } from '@/components/shared/initial-avatar'
+import { cn } from '@/lib/utils'
+import type { AttendanceStatus, RosterEntry, StagedMark } from '../types'
 
-const STATUS_LABEL: Record<AttendanceStatus, string> = {
-  present: 'Present',
-  absent: 'Absent',
-  late: 'Late',
-}
+const SEGMENTS: Segment<AttendanceStatus>[] = [
+  { value: 'present', label: 'Present', tone: 'present' },
+  { value: 'late', label: 'Late', tone: 'late' },
+  { value: 'absent', label: 'Absent', tone: 'absent' },
+]
 
 interface RosterRowProps {
   entry: RosterEntry
-  pending: boolean
-  onMark: (status: AttendanceStatus, note?: string) => void
+  /** The teacher's unsaved change for this student, if any. */
+  staged: StagedMark | undefined
+  onStage: (status: AttendanceStatus, note: string | null) => void
+  disabled: boolean
 }
 
-export function RosterRow({ entry, pending, onMark }: RosterRowProps) {
+export function RosterRow({ entry, staged, onStage, disabled }: RosterRowProps) {
+  const status = staged?.status ?? entry.status
+  const note = staged ? staged.note : entry.note
   const [noteOpen, setNoteOpen] = useState(false)
-  const [noteDraft, setNoteDraft] = useState(entry.note ?? '')
+  const [noteDraft, setNoteDraft] = useState(note ?? '')
 
-  const hasNote = !!entry.note
-  const canNote = entry.status !== null
+  const dirty = staged !== undefined
+
+  const commitNote = () => {
+    setNoteOpen(false)
+    if (!status) return
+    const trimmed = noteDraft.trim()
+    if ((note ?? '') === trimmed) return
+    onStage(status, trimmed || null)
+  }
 
   return (
-    <div className="border-b last:border-b-0 px-5 py-3" style={{ borderColor: 'var(--hn-line-2)' }}>
-      <div className="flex items-center gap-3 flex-wrap">
-        <div
-          className="w-[34px] h-[34px] rounded-full flex-none flex items-center justify-center text-[13px] font-bold text-white"
-          style={{ background: avatarColor(entry.studentId) }}
-        >
-          {initials(entry.studentName)}
+    <div className={cn('border-b px-5 py-3 last:border-b-0', dirty && 'bg-primary/[0.04]')}>
+      <div className="flex flex-wrap items-center gap-3">
+        <InitialAvatar id={entry.studentId} name={entry.studentName} size="sm" />
+        <div className="min-w-[120px] flex-1">
+          <div className="truncate text-[15px] font-bold">{entry.studentName}</div>
+          <div className="text-xs text-muted-foreground">
+            {dirty ? 'Unsaved' : status ? 'Saved' : 'Not marked yet'}
+          </div>
         </div>
-        <div className="flex-1 min-w-[150px]">
-          <div className="text-[15px] font-bold truncate">{entry.studentName}</div>
-        </div>
-        <div className="flex gap-1.5 min-w-[180px]">
-          {(['present', 'late', 'absent'] as const).map((status) => {
-            const active = entry.status === status
-            return (
-              <button
-                key={status}
-                type="button"
-                disabled={pending}
-                onClick={() => onMark(status, entry.note ?? undefined)}
-                className="flex-1 text-[13px] font-bold rounded-[9px] py-2 border disabled:opacity-60"
-                style={
-                  active
-                    ? { background: 'var(--hn-clay)', color: '#fff', borderColor: 'var(--hn-clay)' }
-                    : { background: 'var(--hn-surface)', color: 'var(--hn-sub)', borderColor: 'var(--hn-line)' }
-                }
-              >
-                {STATUS_LABEL[status]}
-              </button>
-            )
-          })}
-        </div>
+        <SegmentedControl
+          aria-label={`Attendance for ${entry.studentName}`}
+          segments={SEGMENTS}
+          value={status}
+          onChange={(next) => onStage(next, note)}
+          disabled={disabled}
+          stretch
+          className="w-full sm:w-auto sm:min-w-[180px] sm:flex-1"
+        />
         <div className="flex-none">
-          <Button variant="outline" size="sm" disabled={!canNote} onClick={() => setNoteOpen((v) => !v)}>
-            {hasNote ? 'Edit note' : 'Note'}
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={disabled || !status}
+            title={status ? undefined : 'Mark the student before adding a note'}
+            onClick={() => {
+              setNoteDraft(note ?? '')
+              setNoteOpen((v) => !v)
+            }}
+          >
+            {note ? 'Edit note' : 'Note'}
           </Button>
         </div>
       </div>
+
       {noteOpen && (
-        <div className="flex gap-2 mt-2.5 pl-[46px]">
+        <div className="mt-2.5 flex gap-2 pl-[46px]">
           <input
+            autoFocus
             value={noteDraft}
             onChange={(e) => setNoteDraft(e.target.value)}
-            placeholder="e.g. picked up early by uncle"
-            className="flex-1 text-[13px] rounded-[9px] px-3 py-2 border"
-            style={{ borderColor: 'var(--hn-line)', background: 'var(--hn-surface-2)' }}
-          />
-          <Button
-            size="sm"
-            disabled={pending || !entry.status}
-            onClick={() => {
-              if (entry.status) onMark(entry.status, noteDraft)
-              setNoteOpen(false)
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commitNote()
+              if (e.key === 'Escape') setNoteOpen(false)
             }}
-          >
+            placeholder="e.g. picked up early by uncle"
+            aria-label={`Note for ${entry.studentName}`}
+            className="flex-1 rounded-md border bg-background px-3 py-2 text-[13px]"
+          />
+          <Button size="sm" onClick={commitNote}>
             Done
           </Button>
         </div>
       )}
-      {!noteOpen && hasNote && (
-        <div className="mt-2 pl-[46px] text-xs italic" style={{ color: 'var(--hn-sub)' }}>
-          &ldquo;{entry.note}&rdquo;
+
+      {!noteOpen && note && (
+        <div className="mt-2 pl-[46px] text-xs text-muted-foreground italic">
+          &ldquo;{note}&rdquo;
         </div>
       )}
     </div>

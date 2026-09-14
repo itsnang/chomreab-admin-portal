@@ -22,3 +22,11 @@ export interface AuditLogEntry {
   previousStatus: AttendanceStatus
   newStatus: AttendanceStatus
 }
+
+/** A mark the teacher has changed but not yet saved. Nothing reaches a parent
+ *  until these are committed by `saveRoster`. */
+export interface StagedMark {
+  studentId: string
+  status: AttendanceStatus
+  note: string | null
+}

@@ -1,1 +1,7 @@
-export { listTeachers, createTeacher, deleteTeacher } from './staff.action'
+export {
+  listTeachers,
+  createTeacher,
+  updateTeacher,
+  resetTeacherPassword,
+  deleteTeacher,
+} from './staff.action'

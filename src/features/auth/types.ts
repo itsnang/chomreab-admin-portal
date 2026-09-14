@@ -1,5 +1,3 @@
-import { z } from 'zod'
-
 export type UserRole = 'admin' | 'teacher'
 
 export interface AuthUser {
@@ -7,11 +5,8 @@ export interface AuthUser {
   name: string
   email: string
   role: UserRole
+  /** True while the account still carries the temporary password an admin
+   *  generated for it. The dashboard holds the user on /change-password until
+   *  they replace it. */
+  mustChangePassword: boolean
 }
-
-export const loginSchema = z.object({
-  email: z.string().email('Enter a valid email'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-})
-
-export type LoginInput = z.infer<typeof loginSchema>

@@ -59,6 +59,43 @@ export async function createTeacher(input: TeacherInput): Promise<{ temporaryPas
   return { temporaryPassword: created.temporary_password, classroomAssignmentFailed }
 }
 
+export async function updateTeacher(
+  id: string,
+  input: { name: string; email: string },
+): Promise<{ error?: string }> {
+  try {
+    await apiFetch(`/staff/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name: input.name, email: input.email }),
+    })
+  } catch (e) {
+    return { error: e instanceof ApiError ? e.message : 'Failed to update teacher' }
+  }
+  revalidatePath('/staff')
+  return {}
+}
+
+interface ResetPasswordApi {
+  temporary_password: string
+}
+
+/** The only recovery path for a locked-out teacher: reset-by-email mints a
+ *  token that `EmailService` never sends. */
+export async function resetTeacherPassword(
+  id: string,
+): Promise<{ temporaryPassword?: string; error?: string }> {
+  let result: ResetPasswordApi
+  try {
+    result = await apiFetch<ResetPasswordApi>(`/staff/${id}/reset-password`, {
+      method: 'POST',
+    })
+  } catch (e) {
+    return { error: e instanceof ApiError ? e.message : 'Failed to reset password' }
+  }
+  revalidatePath('/staff')
+  return { temporaryPassword: result.temporary_password }
+}
+
 export async function deleteTeacher(id: string): Promise<{ error?: string }> {
   try {
     await apiFetch(`/staff/${id}`, { method: 'DELETE' })

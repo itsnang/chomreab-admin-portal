@@ -1,70 +1,114 @@
 import type { ReactNode } from 'react'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getCurrentUser, logout } from '@/features/auth/actions'
 import { DashboardNav } from '@/components/shared/dashboard-nav'
-import { initials } from '@/lib/avatar'
+import { MobileNav, type MobileNavItem } from '@/components/shared/mobile-nav'
+import { InitialAvatar } from '@/components/shared/initial-avatar'
+import { Icons } from '@/components/shared/icons'
 
 const ADMIN_NAV = [
-  { href: '/classrooms', label: 'Classrooms' },
-  { href: '/students', label: 'Students' },
-  { href: '/linking-codes', label: 'Linking codes' },
-  { href: '/staff', label: 'Staff' },
-  { href: '/reports', label: 'Reports' },
-  { href: '/settings', label: 'Settings' },
-]
-const TEACHER_NAV = [{ href: '/attendance', label: 'Attendance' }]
+  { href: '/classrooms', label: 'Classrooms', icon: 'building2' },
+  { href: '/students', label: 'Students', icon: 'graduationCap' },
+  { href: '/linking-codes', label: 'Linking codes', icon: 'qrCode' },
+  { href: '/staff', label: 'Staff', icon: 'users' },
+  { href: '/reports', label: 'Reports', icon: 'barChart3' },
+  { href: '/settings', label: 'Settings', icon: 'settings' },
+] as const satisfies readonly MobileNavItem[]
+const TEACHER_NAV = [
+  { href: '/attendance', label: 'Attendance', icon: 'clipboardCheck' },
+] as const satisfies readonly MobileNavItem[]
+
+const SIGN_OUT_LABEL = 'Sign out'
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const user = await getCurrentUser()
   if (!user) {
     redirect('/login')
   }
+  // An admin generated this account's password and knows it. Nothing in the
+  // app is reachable until the teacher replaces it.
+  if (user.mustChangePassword) {
+    redirect('/change-password')
+  }
 
   const nav = user.role === 'admin' ? ADMIN_NAV : TEACHER_NAV
 
   return (
-    <div className="min-h-svh flex flex-col" style={{ background: 'var(--hn-paper)' }}>
-      <header
-        className="flex items-center gap-6 px-7 py-3.5 sticky top-0 z-20"
-        style={{
-          background: 'var(--hn-surface)',
-          borderBottom: '1px solid var(--hn-line)',
-          boxShadow: '0 1px 2px rgba(16,16,16,0.03)',
-        }}
-      >
-        <div className="flex items-center gap-2.5">
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-extrabold text-[15px]"
-            style={{ background: 'var(--hn-clay)' }}
+    <div className="flex min-h-svh flex-col bg-background sm:flex-row">
+      {/* Phones get a top bar and a slide-out menu: an admin has six
+          destinations plus an account block, which no bottom bar or 88px rail
+          can hold at that width. The rail returns from `sm` up. */}
+      <header className="sticky top-0 z-20 flex items-center gap-2 border-b bg-card px-2 py-2 sm:hidden">
+        <MobileNav
+          items={nav}
+          user={{ id: user.id, name: user.name, role: user.role }}
+          signOut={
+            <form action={logout}>
+              <button
+                type="submit"
+                className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted"
+              >
+                <Icons.logOut size={18} />
+                {SIGN_OUT_LABEL}
+              </button>
+            </form>
+          }
+        />
+        <span className="flex items-center gap-2 font-bold">
+          <span
+            className="grid size-7 flex-none place-items-center rounded-lg bg-primary text-sm font-extrabold text-primary-foreground"
             aria-hidden="true"
           >
-            R
-          </div>
-          <span className="text-[16px] font-bold tracking-tight">Rollcall</span>
+            C
+          </span>
+          Chomreab
+        </span>
+        <span className="ml-auto">
+          <InitialAvatar id={user.id} name={user.name} title={`${user.name} (${user.role})`} />
+        </span>
+      </header>
+
+      <aside className="sticky top-0 hidden h-svh w-22 flex-none flex-col items-center gap-2 overflow-y-auto border-r bg-card py-5 sm:flex">
+        <div
+          className="mb-3.5 grid size-[38px] flex-none place-items-center rounded-lg bg-primary text-[17px] font-extrabold text-primary-foreground"
+          aria-hidden="true"
+          title="Chomreab"
+        >
+          C
         </div>
+
         <DashboardNav items={nav} />
+
         <div className="flex-1" />
-        <div className="flex items-center gap-2.5">
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-            style={{ background: 'var(--hn-clay)' }}
+
+        {/* Signing out was an unlabelled icon that all but vanished against the
+            rail in dark mode; it now reads as a destination like the nav items
+            above it, and the account it signs out of is named next to it. */}
+        <div className="flex w-full flex-col items-center gap-2 border-t pt-3">
+          <InitialAvatar id={user.id} name={user.name} title={`${user.name} (${user.role})`} />
+          <p className="w-full truncate px-1 text-center text-[10px] font-bold text-muted-foreground">
+            {user.name}
+          </p>
+          <Link
+            href="/change-password"
+            className="flex w-[68px] flex-col items-center gap-1 rounded-lg py-2 text-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
-            {initials(user.name)}
-          </div>
-          <div className="leading-tight">
-            <div className="text-[13px] font-bold">{user.name}</div>
-            <div className="text-xs capitalize" style={{ color: 'var(--hn-sub)' }}>
-              {user.role}
-            </div>
-          </div>
-          <form action={logout}>
-            <button type="submit" className="text-sm ml-2" style={{ color: 'var(--hn-sub)' }}>
-              Sign out
+            <Icons.key size={22} />
+            <span className="text-[10px] leading-[1.15] font-bold">Password</span>
+          </Link>
+          <form action={logout} className="flex w-full justify-center">
+            <button
+              type="submit"
+              className="flex w-[68px] cursor-pointer flex-col items-center gap-1 rounded-lg py-2 text-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Icons.logOut size={22} />
+              <span className="text-[10px] leading-[1.15] font-bold">{SIGN_OUT_LABEL}</span>
             </button>
           </form>
         </div>
-      </header>
-      <main className="flex-1">{children}</main>
+      </aside>
+      <main className="flex-1 min-w-0">{children}</main>
     </div>
   )
 }

@@ -3,7 +3,10 @@
 import { PageShell } from '@/components/shared/page-shell'
 import { QueryState } from '@/components/shared/query-state'
 import { StatusChip } from '@/components/shared/status-chip'
+import { StatTile } from '@/components/shared/stat-tile'
+import { Icons } from '@/components/shared/icons'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { useReportsSummary } from '../hooks/use-reports'
 import type { StudentReportRow } from '../types'
 
@@ -46,47 +49,39 @@ export function ReportsScreen() {
       ) : (
         <>
           <div className="flex gap-3">
-            <div className="rounded-xl px-5 py-4 min-w-[180px]" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
-              <div className="font-mono text-[28px] font-semibold" style={{ color: 'var(--hn-success)' }}>
-                {query.data.overallRatePct}%
-              </div>
-              <div className="text-xs mt-1" style={{ color: 'var(--hn-sub)' }}>
-                Attendance rate, last 20 days
-              </div>
+            <div className="min-w-[180px] rounded-xl border bg-card shadow-card-sm px-5 py-4">
+              <StatTile
+                icon={Icons.check}
+                tone="present"
+                value={`${query.data.overallRatePct}%`}
+                label="Attendance rate, last 20 days"
+              />
             </div>
-            <div className="rounded-xl px-5 py-4 min-w-[180px]" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
-              <div
-                className="font-mono text-[28px] font-semibold"
-                style={{ color: query.data.chronicCount > 0 ? 'var(--hn-danger)' : 'var(--hn-success)' }}
-              >
-                {query.data.chronicCount}
-              </div>
-              <div className="text-xs mt-1" style={{ color: 'var(--hn-sub)' }}>
-                Chronic absentees (3+ in window)
-              </div>
+            <div className="min-w-[180px] rounded-xl border bg-card shadow-card-sm px-5 py-4">
+              <StatTile
+                icon={Icons.user}
+                tone={query.data.chronicCount > 0 ? 'absent' : 'present'}
+                value={query.data.chronicCount}
+                label="Chronic absentees (3+ in window)"
+              />
             </div>
           </div>
 
-          <div className="rounded-xl p-5" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
+          <div className="rounded-xl border bg-card shadow-card-sm p-4">
             <div className="text-base font-extrabold mb-3.5">Today&apos;s summary by class</div>
             {query.data.dailySummary.length === 0 ? (
-              <p className="text-sm" style={{ color: 'var(--hn-sub)' }}>
-                No classes yet.
-              </p>
+              <p className="text-sm text-muted-foreground">No classes yet.</p>
             ) : (
               query.data.dailySummary.map((d, i) => (
-                <div key={d.classroomId} className="flex items-center gap-4 py-2.5" style={i > 0 ? { borderTop: '1px solid var(--hn-line-2)' } : undefined}>
+                <div
+                  key={d.classroomId}
+                  className={cn('flex items-center gap-4 py-2.5', i > 0 && 'border-t')}
+                >
                   <div className="flex-1 text-sm font-bold">{d.classroomName}</div>
-                  <div className="font-mono text-[13px] w-[60px]" style={{ color: 'var(--hn-success)' }}>
-                    {d.present} P
-                  </div>
-                  <div className="font-mono text-[13px] w-[60px]" style={{ color: 'var(--hn-neutral)' }}>
-                    {d.late} L
-                  </div>
-                  <div className="font-mono text-[13px] w-[60px]" style={{ color: 'var(--hn-danger)' }}>
-                    {d.absent} A
-                  </div>
-                  <div className="font-mono text-[13px] w-[90px]" style={{ color: 'var(--hn-sub)' }}>
+                  <div className="w-[60px] font-mono text-[13px] text-present">{d.present} P</div>
+                  <div className="w-[60px] font-mono text-[13px] text-late">{d.late} L</div>
+                  <div className="w-[60px] font-mono text-[13px] text-absent">{d.absent} A</div>
+                  <div className="w-[90px] font-mono text-[13px] text-muted-foreground">
                     {d.unmarked} unmarked
                   </div>
                 </div>
@@ -94,24 +89,23 @@ export function ReportsScreen() {
             )}
           </div>
 
-          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--hn-surface)', border: '1px solid var(--hn-line)' }}>
-            <div className="flex items-center gap-4 px-5 py-4" style={{ borderBottom: '1px solid var(--hn-line)' }}>
+          <div className="overflow-hidden rounded-xl border bg-card shadow-card-sm">
+            <div className="flex items-center gap-4 border-b px-5 py-4">
               <div className="flex-1 text-lg font-extrabold">Per-student attendance</div>
               <Button variant="outline" size="sm" onClick={() => exportCsv(query.data.studentRows)}>
                 Export CSV
               </Button>
             </div>
             {query.data.studentRows.length === 0 ? (
-              <p className="text-sm p-5" style={{ color: 'var(--hn-sub)' }}>
-                No students yet.
-              </p>
+              <p className="p-5 text-sm text-muted-foreground">No students yet.</p>
             ) : (
               query.data.studentRows.map((r, i) => (
-                <div key={r.studentId} className="flex items-center gap-3 px-5 py-3" style={i > 0 ? { borderTop: '1px solid var(--hn-line-2)' } : undefined}>
-                  <span className="flex-1 text-sm font-bold truncate">{r.studentName}</span>
-                  <span className="text-xs w-[110px]" style={{ color: 'var(--hn-sub)' }}>
-                    {r.classroomName}
-                  </span>
+                <div
+                  key={r.studentId}
+                  className={cn('flex items-center gap-3 px-5 py-3', i > 0 && 'border-t')}
+                >
+                  <span className="flex-1 truncate text-sm font-bold">{r.studentName}</span>
+                  <span className="w-[110px] text-xs text-muted-foreground">{r.classroomName}</span>
                   <span className="font-mono text-[13px] w-[70px]">{r.present}</span>
                   <span className="font-mono text-[13px] w-[60px]">{r.late}</span>
                   <span className="font-mono text-[13px] w-[70px]">{r.absent}</span>
