@@ -53,6 +53,7 @@ src/features/<domain>/
 - `students` slice → imports `useClassrooms` from `classrooms` (classroom picker + name lookup on the students list)
 - `attendance` slice → imports `useClassrooms` from `classrooms` (classroom picker for the roster)
 - `classrooms` slice → imports `useTeachers` from `staff` (teacher picker when assigning a classroom)
+- `students` slice → imports `useSchoolSettings` from `settings` (bot username, to build linking-code invite links)
 
 **Shared presentational components** live in `src/components/shared/` — used across slices, must not import from any feature slice:
 

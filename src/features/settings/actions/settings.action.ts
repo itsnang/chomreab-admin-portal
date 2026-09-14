@@ -10,6 +10,7 @@ interface SchoolSettingsApi {
   late_cutoff_minutes: number
   absence_message_template: string
   telegram_bot_token: string | null
+  telegram_bot_username: string | null
 }
 
 export async function getSchoolSettings(): Promise<SchoolSettings> {
@@ -19,6 +20,7 @@ export async function getSchoolSettings(): Promise<SchoolSettings> {
     lateCutoffMinutes: api.late_cutoff_minutes,
     absenceMessageTemplate: api.absence_message_template,
     telegramBotTokenSet: !!api.telegram_bot_token,
+    telegramBotUsername: api.telegram_bot_username,
   }
 }
 
