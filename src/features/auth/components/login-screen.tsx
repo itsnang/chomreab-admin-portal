@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { Logo } from '@/components/shared/logo'
 import { login } from '../actions'
 import { loginSchema, type LoginInput } from '../schemas'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -35,12 +36,7 @@ export function LoginScreen() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center px-4 py-10">
       <div className="mb-8 flex items-center gap-2.5">
-        <div
-          className="grid size-8 flex-none place-items-center rounded-lg bg-primary text-base font-extrabold text-primary-foreground"
-          aria-hidden="true"
-        >
-          C
-        </div>
+        <Logo className="size-8 flex-none text-primary" />
         <span className="text-[17px] font-bold">Chomreab</span>
       </div>
 

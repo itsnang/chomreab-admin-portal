@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { Logo } from '@/components/shared/logo'
 import { changePassword } from '../actions'
 import { changePasswordSchema, type ChangePasswordInput } from '../schemas'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
@@ -43,12 +44,7 @@ export function ChangePasswordScreen({ forced }: ChangePasswordScreenProps) {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center px-4 py-10">
       <div className="mb-8 flex items-center gap-2.5">
-        <div
-          className="grid size-8 flex-none place-items-center rounded-lg bg-primary text-base font-extrabold text-primary-foreground"
-          aria-hidden="true"
-        >
-          C
-        </div>
+        <Logo className="size-8 flex-none text-primary" />
         <span className="text-[17px] font-bold">Chomreab</span>
       </div>
 
