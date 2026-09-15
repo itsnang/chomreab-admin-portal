@@ -5,6 +5,7 @@ import { getCurrentUser, logout } from '@/features/auth/actions'
 import { DashboardNav } from '@/components/shared/dashboard-nav'
 import { MobileNav, type MobileNavItem } from '@/components/shared/mobile-nav'
 import { InitialAvatar } from '@/components/shared/initial-avatar'
+import { Logo, LogoTile } from '@/components/shared/logo'
 import { Icons } from '@/components/shared/icons'
 
 const ADMIN_NAV = [
@@ -56,12 +57,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           }
         />
         <span className="flex items-center gap-2 font-bold">
-          <span
-            className="grid size-7 flex-none place-items-center rounded-lg bg-primary text-sm font-extrabold text-primary-foreground"
-            aria-hidden="true"
-          >
-            C
-          </span>
+          <Logo className="size-7 flex-none text-primary" />
           Chomreab
         </span>
         <span className="ml-auto">
@@ -70,13 +66,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       </header>
 
       <aside className="sticky top-0 hidden h-svh w-22 flex-none flex-col items-center gap-2 overflow-y-auto border-r bg-card py-5 sm:flex">
-        <div
-          className="mb-3.5 grid size-[38px] flex-none place-items-center rounded-lg bg-primary text-[17px] font-extrabold text-primary-foreground"
-          aria-hidden="true"
-          title="Chomreab"
-        >
-          C
-        </div>
+        <LogoTile className="mb-3.5 size-[38px]" />
 
         <DashboardNav items={nav} />
 

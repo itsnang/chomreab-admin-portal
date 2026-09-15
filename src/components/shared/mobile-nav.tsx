@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { Icons } from './icons'
 import { InitialAvatar } from './initial-avatar'
+import { Logo } from './logo'
 
 export interface MobileNavItem {
   href: string
@@ -49,12 +50,7 @@ export function MobileNav({ items, user, signOut }: MobileNavProps) {
       <SheetContent side="left" className="w-[17rem] p-0">
         <SheetHeader className="border-b">
           <SheetTitle className="flex items-center gap-2.5">
-            <span
-              className="grid size-8 flex-none place-items-center rounded-lg bg-primary text-base font-extrabold text-primary-foreground"
-              aria-hidden="true"
-            >
-              C
-            </span>
+            <Logo className="size-8 flex-none text-primary" />
             Chomreab
           </SheetTitle>
         </SheetHeader>
