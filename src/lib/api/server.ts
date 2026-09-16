@@ -55,9 +55,14 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 
   let res = await request(path, init, token)
 
-  // The access token lasts ~15 min; on expiry the API answers 401. If we sent a
-  // token, try to refresh it once and replay the request before giving up.
-  if (res.status === 401 && token) {
+  // The access token lasts ~15 min; on expiry the API answers 401. Retry once
+  // with a refreshed token before giving up.
+  //
+  // Deliberately not conditional on having *sent* a token: the access cookie
+  // expires with the token inside it, so the case worth handling most is the
+  // one where there was nothing to send. Gating this on `token` meant a
+  // request made after those 15 minutes never even attempted a refresh.
+  if (res.status === 401) {
     const refreshed = await refreshSession()
     if (refreshed) res = await request(path, init, refreshed)
   }
