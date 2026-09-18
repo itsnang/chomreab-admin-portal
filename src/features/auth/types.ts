@@ -9,4 +9,5 @@ export interface AuthUser {
    *  generated for it. The dashboard holds the user on /change-password until
    *  they replace it. */
   mustChangePassword: boolean
+  schoolId: string
 }
