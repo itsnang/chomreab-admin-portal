@@ -114,3 +114,13 @@ All files use **kebab-case**, including React component files. The file name is 
 - `noUncheckedIndexedAccess` — all array/object index reads may be `undefined`
 - `exactOptionalPropertyTypes` — passing `prop={undefined}` explicitly is a type error when the type is `T` not `T | undefined`
 - `noImplicitOverride`, `noFallthroughCasesInSwitch`
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as GitHub issues in `itsnang/attendance-admin`, managed with the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
