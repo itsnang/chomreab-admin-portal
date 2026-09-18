@@ -7,8 +7,20 @@ import {
   maxAgeFromExpiry,
 } from '@/features/auth/jwt-expiry'
 
-// Unauthenticated (auth) route group — never gated.
+// Ungated, and bounced to the dashboard when a session already exists —
+// there is no reason to show a signed-in user the sign-in form.
 const AUTH_PATHS = ['/login']
+
+/**
+ * Ungated in both directions: no session required to reach them, and an
+ * existing session is not redirected away from them either.
+ *
+ * `/signup` is how a School comes to exist at all, so the visitor who needs it
+ * most is by definition signed out. `/verify-email` cannot be an AUTH_PATH:
+ * bouncing a signed-in visitor to the dashboard would swallow the token in
+ * the link and silently skip the verification it was sent to perform.
+ */
+const PUBLIC_PATHS = ['/signup', '/verify-email']
 
 // Read straight from `process.env` rather than through `@/env`, which imports
 // `server-only` and so cannot be pulled into the proxy bundle. Same default.
@@ -87,7 +99,8 @@ function signedOut(request: NextRequest): NextResponse {
 
 /**
  * Gates the dashboard, and keeps a session alive across the access token's
- * short life.
+ * short life. Signup and email verification are exempt in both directions —
+ * see PUBLIC_PATHS.
  *
  * The access token lasts 15 minutes and its cookie expires with it; the
  * refresh token lasts 7 days. Treating a missing access cookie as "signed
@@ -108,7 +121,12 @@ function signedOut(request: NextRequest): NextResponse {
  */
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const isAuthPath = AUTH_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))
+  const matches = (paths: string[]) =>
+    paths.some((path) => pathname === path || pathname.startsWith(`${path}/`))
+
+  if (matches(PUBLIC_PATHS)) return NextResponse.next()
+
+  const isAuthPath = matches(AUTH_PATHS)
 
   const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value
   const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value
