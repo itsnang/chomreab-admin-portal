@@ -30,6 +30,7 @@ export interface SessionData {
     email: string
     role: AuthUser['role']
     must_change_password: boolean
+    school_id: string
   }
 }
 
@@ -57,6 +58,7 @@ export async function persistSession(data: SessionData): Promise<void> {
     email: data.user.email,
     role: data.user.role,
     mustChangePassword: data.user.must_change_password,
+    schoolId: data.user.school_id,
   }
   cookieStore.set(USER_COOKIE, JSON.stringify(user), cookieOptions(refreshMaxAge))
 }

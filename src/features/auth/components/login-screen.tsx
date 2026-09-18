@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -17,7 +18,9 @@ export function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false)
   // changePassword revokes the session and sends the user back here, so say so
   // rather than leaving them wondering why they were signed out.
-  const justChangedPassword = useSearchParams().get('changed') === '1'
+  const searchParams = useSearchParams()
+  const justChangedPassword = searchParams.get('changed') === '1'
+  const justVerified = searchParams.get('verified') === '1'
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -45,7 +48,9 @@ export function LoginScreen() {
         <p className="mt-1 mb-7 text-[13px] text-muted-foreground">
           {justChangedPassword
             ? 'Password changed. Sign in with your new one.'
-            : 'Sign in with your admin or teacher account'}
+            : justVerified
+              ? 'Email confirmed. Sign in to get started.'
+              : 'Sign in with your admin or teacher account'}
         </p>
 
         <Form {...form}>
@@ -112,9 +117,11 @@ export function LoginScreen() {
         </Form>
       </div>
 
-      {/* No self-service sign up — admins create teacher accounts. */}
       <p className="mt-6 text-[13px] text-muted-foreground">
-        Accounts are created by your school admin.
+        New school or centre?{' '}
+        <Link href="/signup" className="font-medium text-foreground hover:underline">
+          Start a free trial
+        </Link>
       </p>
     </div>
   )
