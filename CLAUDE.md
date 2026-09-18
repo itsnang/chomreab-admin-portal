@@ -76,7 +76,7 @@ src/features/<domain>/
 ### Route groups
 
 `src/app/` uses parenthesised route groups (URL-invisible):
-- `(auth)` → `/login` — unauthenticated
+- `(auth)` → `/login`, `/signup`, `/verify-email` — unauthenticated
 - `(dashboard)` → `/dashboard`, and future `/dashboard/*` routes — authenticated shell, gated in `src/proxy.ts`. Nav items should be filtered by `user.role` (`'admin' | 'teacher'`) from `getCurrentUser()` — admins see students/classrooms/linking codes, teachers see attendance marking for their assigned classes.
 
 ### Environment variables
@@ -90,7 +90,7 @@ Two separate modules enforce the server/client boundary:
 
 ### Auth
 
-Session cookies: `att_access_token`, `att_refresh_token`, `att_user` (`src/features/auth/cookies.ts`), httpOnly, written server-side only (`src/lib/api/server.ts` / `src/features/auth/actions/session-store.ts`). There is no self-service registration — admins create teacher accounts (backend `admin` module, not yet built) — and no separate parent role: parents only interact via the Telegram bot in `attendance-api`, never through this app.
+Session cookies: `att_access_token`, `att_refresh_token`, `att_user` (`src/features/auth/cookies.ts`), httpOnly, written server-side only (`src/lib/api/server.ts` / `src/features/auth/actions/session-store.ts`). `/signup` self-registers a School and its founding admin (`POST /schools/signup`) but persists no session — the account can't sign in until `/verify-email` confirms the address. Every other account (teachers) is created by an already-verified admin. There is no separate parent role: parents only interact via the Telegram bot in `attendance-api`, never through this app.
 
 ### TanStack Query v5
 
