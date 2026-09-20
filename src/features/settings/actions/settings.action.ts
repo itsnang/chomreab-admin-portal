@@ -9,8 +9,7 @@ interface SchoolSettingsApi {
   school_name: string
   late_cutoff_minutes: number
   absence_message_template: string
-  telegram_bot_token: string | null
-  telegram_bot_username: string | null
+  bot_username: string | null
 }
 
 export async function getSchoolSettings(): Promise<SchoolSettings> {
@@ -19,8 +18,7 @@ export async function getSchoolSettings(): Promise<SchoolSettings> {
     schoolName: api.school_name,
     lateCutoffMinutes: api.late_cutoff_minutes,
     absenceMessageTemplate: api.absence_message_template,
-    telegramBotTokenSet: !!api.telegram_bot_token,
-    telegramBotUsername: api.telegram_bot_username,
+    botUsername: api.bot_username,
   }
 }
 
@@ -32,7 +30,6 @@ export async function updateSchoolSettings(input: SettingsInput): Promise<{ erro
         school_name: input.schoolName,
         late_cutoff_minutes: input.lateCutoffMinutes,
         absence_message_template: input.absenceMessageTemplate,
-        ...(input.telegramBotToken ? { telegram_bot_token: input.telegramBotToken } : {}),
       }),
     })
   } catch (e) {
