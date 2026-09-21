@@ -14,6 +14,7 @@ const ADMIN_NAV = [
   { href: '/linking-codes', label: 'Linking codes', icon: 'qrCode' },
   { href: '/staff', label: 'Staff', icon: 'users' },
   { href: '/reports', label: 'Reports', icon: 'barChart3' },
+  { href: '/billing', label: 'Billing', icon: 'creditCard' },
   { href: '/settings', label: 'Settings', icon: 'settings' },
 ] as const satisfies readonly MobileNavItem[]
 const TEACHER_NAV = [
