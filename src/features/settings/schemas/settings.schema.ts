@@ -7,7 +7,6 @@ export const settingsSchema = z.object({
   // an `unknown` input and zodResolver stops matching `useForm<SettingsInput>`.
   lateCutoffMinutes: z.coerce.number<number>().int().min(0, 'Must be 0 or more'),
   absenceMessageTemplate: z.string().min(1, 'Template is required'),
-  telegramBotToken: z.string().optional(),
 })
 
 export type SettingsInput = z.infer<typeof settingsSchema>

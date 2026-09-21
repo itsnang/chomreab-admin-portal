@@ -1,37 +1,6 @@
 'use server'
 
-import { ApiError, apiFetch } from '@/lib/api/server'
-import type { TelegramStatus, TelegramWebhookStatus } from '../types'
-
-interface TelegramStatusApi {
-  status: TelegramWebhookStatus
-  detail: string | null
-  expected_url: string | null
-  actual_url: string | null
-}
-
-export async function getTelegramStatus(): Promise<TelegramStatus | { error: string }> {
-  try {
-    const api = await apiFetch<TelegramStatusApi>('/school-settings/telegram-status')
-    return {
-      status: api.status,
-      detail: api.detail,
-      expectedUrl: api.expected_url,
-      actualUrl: api.actual_url,
-    }
-  } catch (e) {
-    return { error: e instanceof ApiError ? e.message : 'Could not check the connection' }
-  }
-}
-
-export async function registerTelegramWebhook(): Promise<{ error?: string }> {
-  try {
-    await apiFetch('/school-settings/telegram-webhook', { method: 'POST' })
-  } catch (e) {
-    return { error: e instanceof ApiError ? e.message : 'Could not connect the bot' }
-  }
-  return {}
-}
+import { apiFetch } from '@/lib/api/server'
 
 interface LinkingStatusApi {
   linked: boolean

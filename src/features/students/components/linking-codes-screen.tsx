@@ -27,7 +27,7 @@ export function LinkingCodesScreen() {
   const [unlinkedOnly, setUnlinkedOnly] = useState(false)
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
 
-  const botUsername = settingsQuery.data?.telegramBotUsername ?? null
+  const botUsername = settingsQuery.data?.botUsername ?? null
 
   const classroomName = (id: string) => classroomsQuery.data?.find((c) => c.id === id)?.name ?? id
   const linkingByStudent = new Map((linkingQuery.data ?? []).map((l) => [l.studentId, l]))
