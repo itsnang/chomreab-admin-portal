@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
 import { PageShell } from '@/components/shared/page-shell'
 import { QueryState } from '@/components/shared/query-state'
 import { SectionHeader } from '@/components/shared/section-header'
@@ -17,8 +18,8 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { useBillingStatus } from '../hooks/use-billing-status'
-import { startCheckout } from '../actions'
-import type { CutLuyCheckout, Invoice, SubscriptionStatus } from '../types'
+import { startCheckout, startSubscription } from '../actions'
+import type { CutLuyCheckout, Invoice, SubscriptionPlan, SubscriptionStatus } from '../types'
 
 const CARD_CLASS = 'rounded-xl border bg-card p-4 shadow-card-sm'
 
@@ -99,10 +100,7 @@ export function BillingScreen() {
             )}
           </div>
         ) : (
-          <div className={CARD_CLASS}>
-            <SectionHeader icon={Icons.creditCard} title="Subscription" />
-            <p className="text-sm text-muted-foreground">No subscription started yet.</p>
-          </div>
+          <NoSubscriptionCard />
         )}
 
         {openInvoice ? (
@@ -117,6 +115,62 @@ export function BillingScreen() {
 
       <CheckoutSheet checkout={checkout} onOpenChange={(open) => !open && setCheckout(null)} />
     </PageShell>
+  )
+}
+
+/** A School has no Subscription until its admin actively converts — during
+ *  or after the 30-day trial, per CONTEXT.md's Trial/Subscription entries in
+ *  attendance-api. This is that conversion moment: a one-time action, not
+ *  something that can be undone from here once started. */
+function NoSubscriptionCard() {
+  const queryClient = useQueryClient()
+  const [plan, setPlan] = useState<SubscriptionPlan>('monthly')
+  const [pending, setPending] = useState(false)
+
+  const onSubscribe = async () => {
+    setPending(true)
+    const result = await startSubscription(plan)
+    setPending(false)
+    if (result.error) {
+      toast.error(result.error)
+      return
+    }
+    toast.success('Subscription started')
+    await queryClient.invalidateQueries({ queryKey: ['billing-status'] })
+  }
+
+  return (
+    <div className={CARD_CLASS}>
+      <SectionHeader icon={Icons.creditCard} title="Subscription" />
+      <p className="text-sm text-muted-foreground">
+        No subscription started yet — you can convert anytime during or after your trial.
+      </p>
+      <div className="mt-3.5 flex flex-wrap items-center gap-2.5">
+        <div className="inline-flex rounded-lg border p-0.5">
+          {(['monthly', 'annual'] as const).map((option) => (
+            <button
+              key={option}
+              onClick={() => setPlan(option)}
+              className={`rounded-md px-3 py-1.5 text-xs font-bold capitalize transition-colors ${
+                plan === option
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={onSubscribe}
+          disabled={pending}
+          className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground disabled:opacity-75"
+        >
+          {pending ? <Icons.loader2 size={16} className="animate-spin" /> : <Icons.check size={16} />}
+          {pending ? 'Starting…' : 'Subscribe now'}
+        </button>
+      </div>
+    </div>
   )
 }
 
