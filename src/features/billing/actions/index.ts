@@ -1,1 +1,1 @@
-export { getBillingStatus, startCheckout } from './billing.action'
+export { getBillingStatus, startCheckout, startSubscription } from './billing.action'

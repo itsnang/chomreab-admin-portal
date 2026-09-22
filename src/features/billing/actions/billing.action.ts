@@ -65,3 +65,17 @@ export async function startCheckout(
     return { error: e instanceof ApiError ? e.message : 'Failed to start checkout' }
   }
 }
+
+export async function startSubscription(
+  plan: Subscription['plan']
+): Promise<{ error?: string }> {
+  try {
+    await apiFetch('/billing/subscribe', {
+      method: 'POST',
+      body: JSON.stringify({ plan }),
+    })
+  } catch (e) {
+    return { error: e instanceof ApiError ? e.message : 'Failed to start subscription' }
+  }
+  return {}
+}
