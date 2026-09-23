@@ -14,15 +14,13 @@ interface PageShellProps {
 export function PageShell({ heading, description, actions, toolbar, children }: PageShellProps) {
   return (
     <div className="flex flex-col">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b px-6 py-5">
-        <div>
+      <div className="flex flex-wrap items-center gap-3 border-b px-6 py-5">
+        <div className="mr-auto">
           <h1 className="text-[19px] font-extrabold -tracking-[0.02em]">{heading}</h1>
           {description && <p className="mt-0.5 text-xs font-semibold text-muted-foreground">{description}</p>}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {toolbar}
-          {actions}
-        </div>
+        {toolbar}
+        {actions}
       </div>
       <div className="flex flex-col gap-4 p-6">{children}</div>
     </div>

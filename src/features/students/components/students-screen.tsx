@@ -9,7 +9,7 @@ import { ListRow } from '@/components/shared/list-row'
 import { StatTile } from '@/components/shared/stat-tile'
 import { StatusChip } from '@/components/shared/status-chip'
 import { EmptyState } from '@/components/shared/empty-state'
-import { ConfirmButton } from '@/components/shared/confirm-button'
+import { RowActionsMenu } from '@/components/shared/row-actions-menu'
 import { SegmentedControl } from '@/components/shared/segmented-control'
 import { Icons } from '@/components/shared/icons'
 import { Button } from '@/components/ui/button'
@@ -248,44 +248,39 @@ export function StudentsScreen() {
                       <StatusChip status={linking?.linked ? 'linked' : 'unlinked'} />
                     )}
 
-                    <Button variant="ghost" size="sm" onClick={() => setEditing(s)}>
-                      <Icons.pencil />
-                      Edit
-                    </Button>
-
-                    {inactive ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => void onSetStatus(s, 'active')}
-                      >
-                        Reactivate
-                      </Button>
-                    ) : (
-                      <ConfirmButton
-                        variant="outline"
-                        title={`Deactivate ${s.name}?`}
-                        description="They come off every roster and stop being counted, and their attendance history stays readable. You can reactivate them later."
-                        confirmLabel="Deactivate"
-                        onConfirm={() => void onSetStatus(s, 'inactive')}
-                      >
-                        Deactivate
-                      </ConfirmButton>
-                    )}
-
-                    {/* Hard delete is for a student entered twice, not for one
-                        who has left — it orphans their attendance history. */}
-                    <ConfirmButton
-                      destructive
-                      size="icon-sm"
-                      aria-label={`Delete ${s.name}`}
-                      title={`Permanently delete ${s.name}?`}
-                      description="This is for a record entered by mistake. Their attendance history, audit trail and parent link are left pointing at a student who no longer exists, and will show as “Unknown student”. To remove a child who has left, deactivate them instead."
-                      confirmLabel="Delete permanently"
-                      onConfirm={() => void onDelete(s)}
-                    >
-                      <Icons.trash2 />
-                    </ConfirmButton>
+                    <RowActionsMenu
+                      label={`Actions for ${s.name}`}
+                      actions={[
+                        { label: 'Edit', icon: 'pencil', onClick: () => setEditing(s) },
+                        inactive
+                          ? { label: 'Reactivate', onClick: () => void onSetStatus(s, 'active') }
+                          : {
+                              label: 'Deactivate',
+                              onClick: () => void onSetStatus(s, 'inactive'),
+                              confirm: {
+                                title: `Deactivate ${s.name}?`,
+                                description:
+                                  'They come off every roster and stop being counted, and their attendance history stays readable. You can reactivate them later.',
+                                confirmLabel: 'Deactivate',
+                              },
+                            },
+                        // Hard delete is for a student entered twice, not for
+                        // one who has left — it orphans their attendance
+                        // history.
+                        {
+                          label: 'Delete permanently',
+                          icon: 'trash2',
+                          destructive: true,
+                          onClick: () => void onDelete(s),
+                          confirm: {
+                            title: `Permanently delete ${s.name}?`,
+                            description:
+                              'This is for a record entered by mistake. Their attendance history, audit trail and parent link are left pointing at a student who no longer exists, and will show as “Unknown student”. To remove a child who has left, deactivate them instead.',
+                            confirmLabel: 'Delete permanently',
+                          },
+                        },
+                      ]}
+                    />
                   </>
                 }
               />
