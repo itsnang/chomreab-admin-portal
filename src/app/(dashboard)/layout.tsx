@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getCurrentUser, logout } from '@/features/auth/actions'
@@ -7,6 +7,7 @@ import { MobileNav, type MobileNavItem } from '@/components/shared/mobile-nav'
 import { InitialAvatar } from '@/components/shared/initial-avatar'
 import { Logo, LogoTile } from '@/components/shared/logo'
 import { Icons } from '@/components/shared/icons'
+import { PrototypeNavSwitcher } from '@/components/shared/prototype-nav-switcher'
 
 const ADMIN_NAV = [
   { href: '/classrooms', label: 'Classrooms', icon: 'building2' },
@@ -100,6 +101,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         </div>
       </aside>
       <main className="flex-1 min-w-0">{children}</main>
+
+      <Suspense fallback={null}>
+        <PrototypeNavSwitcher />
+      </Suspense>
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import {
   Sheet,
   SheetContent,
@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils'
 import { Icons } from './icons'
 import { InitialAvatar } from './initial-avatar'
 import { Logo } from './logo'
+import { groupNavItems, NAV_GROUP_LABELS, type NavVariant } from './nav-groups'
 
 export interface MobileNavItem {
   href: string
@@ -36,9 +37,43 @@ interface MobileNavProps {
  * across 375px. A sheet holds any number of them at a comfortable size and
  * leaves the full width to the content.
  */
+function NavLink({
+  item,
+  active,
+  onNavigate,
+  compact,
+}: {
+  item: MobileNavItem
+  active: boolean
+  onNavigate: () => void
+  compact?: boolean
+}) {
+  const Icon = Icons[item.icon]
+  return (
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      aria-current={active ? 'page' : undefined}
+      className={cn(
+        'flex items-center gap-3 rounded-lg px-3 text-sm font-semibold transition-colors',
+        compact ? 'py-2 text-muted-foreground/80' : 'py-2.5',
+        active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
+      )}
+    >
+      <Icon size={compact ? 16 : 18} />
+      {item.label}
+    </Link>
+  )
+}
+
 export function MobileNav({ items, user, signOut }: MobileNavProps) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const variant = (searchParams.get('variant') ?? 'A') as NavVariant
+
+  const isActive = (item: MobileNavItem) => pathname === item.href || pathname.startsWith(`${item.href}/`)
+  const onNavigate = () => setOpen(false)
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -56,25 +91,42 @@ export function MobileNav({ items, user, signOut }: MobileNavProps) {
         </SheetHeader>
 
         <nav className="flex flex-col gap-1 p-3">
-          {items.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
-            const Icon = Icons[item.icon]
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                aria-current={active ? 'page' : undefined}
-                className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors',
-                  active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
+          {variant === 'C' ? (
+            <>
+              {items.slice(0, 2).map((item) => (
+                <NavLink key={item.href} item={item} active={isActive(item)} onNavigate={onNavigate} />
+              ))}
+              {items.length > 2 && (
+                <>
+                  <div className="my-1 h-px bg-border" />
+                  {items.slice(2).map((item) => (
+                    <NavLink key={item.href} item={item} active={isActive(item)} onNavigate={onNavigate} compact />
+                  ))}
+                </>
+              )}
+            </>
+          ) : (
+            groupNavItems(items).map((group, gi) => (
+              <div key={gi} className="flex flex-col gap-1">
+                {gi > 0 &&
+                  (variant === 'B' ? (
+                    <span className="mt-2 mb-0.5 px-3 text-[10px] font-bold tracking-wide text-muted-foreground/60 uppercase">
+                      {NAV_GROUP_LABELS[gi]}
+                    </span>
+                  ) : (
+                    <div className="my-1 h-px bg-border" />
+                  ))}
+                {variant === 'B' && gi === 0 && (
+                  <span className="mb-0.5 px-3 text-[10px] font-bold tracking-wide text-muted-foreground/60 uppercase">
+                    {NAV_GROUP_LABELS[gi]}
+                  </span>
                 )}
-              >
-                <Icon size={18} />
-                {item.label}
-              </Link>
-            )
-          })}
+                {group.map((item) => (
+                  <NavLink key={item.href} item={item} active={isActive(item)} onNavigate={onNavigate} />
+                ))}
+              </div>
+            ))
+          )}
         </nav>
 
         <div className="mt-auto border-t p-3">
