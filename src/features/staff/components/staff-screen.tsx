@@ -9,7 +9,7 @@ import { PageShell } from '@/components/shared/page-shell'
 import { ListCard } from '@/components/shared/list-card'
 import { ListRow } from '@/components/shared/list-row'
 import { EmptyState } from '@/components/shared/empty-state'
-import { ConfirmButton } from '@/components/shared/confirm-button'
+import { RowActionsMenu } from '@/components/shared/row-actions-menu'
 import { FormSheet } from '@/components/shared/form-sheet'
 import { TempPasswordPanel, type CreatedTeacherCredentials } from './temp-password-panel'
 import { Icons } from '@/components/shared/icons'
@@ -245,32 +245,36 @@ export function StaffScreen() {
                   <span className="hidden w-[200px] truncate text-xs text-muted-foreground md:block">
                     {t.classroomNames.length > 0 ? t.classroomNames.join(', ') : 'Unassigned'}
                   </span>
-                  <Button variant="ghost" size="sm" onClick={() => openEdit(t)}>
-                    <Icons.pencil />
-                    Edit
-                  </Button>
-                  <ConfirmButton
-                    variant="outline"
-                    disabled={resettingId === t.id}
-                    title={`Reset ${t.name}'s password?`}
-                    description="Issues a new temporary password, shown to you once. Their current password stops working immediately and they are signed out everywhere."
-                    confirmLabel="Reset password"
-                    onConfirm={() => void onResetPassword(t)}
-                  >
-                    <Icons.key />
-                    Reset password
-                  </ConfirmButton>
-                  <ConfirmButton
-                    destructive
-                    size="icon-sm"
-                    aria-label={`Remove ${t.name}`}
-                    title={`Remove ${t.name}?`}
-                    description="Their account is deleted and they lose access immediately. Attendance they recorded is kept."
-                    confirmLabel="Remove teacher"
-                    onConfirm={() => void onDelete(t.id, t.name)}
-                  >
-                    <Icons.trash2 />
-                  </ConfirmButton>
+                  <RowActionsMenu
+                    label={`Actions for ${t.name}`}
+                    actions={[
+                      { label: 'Edit', icon: 'pencil', onClick: () => openEdit(t) },
+                      {
+                        label: 'Reset password',
+                        icon: 'key',
+                        disabled: resettingId === t.id,
+                        onClick: () => void onResetPassword(t),
+                        confirm: {
+                          title: `Reset ${t.name}'s password?`,
+                          description:
+                            'Issues a new temporary password, shown to you once. Their current password stops working immediately and they are signed out everywhere.',
+                          confirmLabel: 'Reset password',
+                        },
+                      },
+                      {
+                        label: 'Remove teacher',
+                        icon: 'trash2',
+                        destructive: true,
+                        onClick: () => void onDelete(t.id, t.name),
+                        confirm: {
+                          title: `Remove ${t.name}?`,
+                          description:
+                            'Their account is deleted and they lose access immediately. Attendance they recorded is kept.',
+                          confirmLabel: 'Remove teacher',
+                        },
+                      },
+                    ]}
+                  />
                 </>
               }
             />

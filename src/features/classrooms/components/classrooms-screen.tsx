@@ -9,7 +9,7 @@ import { PageShell } from '@/components/shared/page-shell'
 import { ListCard } from '@/components/shared/list-card'
 import { ListRow } from '@/components/shared/list-row'
 import { EmptyState } from '@/components/shared/empty-state'
-import { ConfirmButton } from '@/components/shared/confirm-button'
+import { RowActionsMenu } from '@/components/shared/row-actions-menu'
 import { FormSheet } from '@/components/shared/form-sheet'
 import { Icons } from '@/components/shared/icons'
 import { SelectField } from '@/components/shared/select-field'
@@ -238,22 +238,24 @@ export function ClassroomsScreen() {
                 .filter(Boolean)
                 .join(' · ')}
               actions={
-                <>
-                  <Button variant="ghost" size="sm" onClick={() => openEdit(c)}>
-                    <Icons.pencil />
-                    Edit
-                  </Button>
-                  <ConfirmButton
-                    destructive
-                    title={`Delete ${c.name}?`}
-                    description="The classroom is removed for everyone. Students in it must be reassigned before they can be marked again."
-                    confirmLabel="Delete classroom"
-                    onConfirm={() => void onDelete(c.id, c.name)}
-                  >
-                    <Icons.trash2 />
-                    Delete
-                  </ConfirmButton>
-                </>
+                <RowActionsMenu
+                  label={`Actions for ${c.name}`}
+                  actions={[
+                    { label: 'Edit', icon: 'pencil', onClick: () => openEdit(c) },
+                    {
+                      label: 'Delete',
+                      icon: 'trash2',
+                      destructive: true,
+                      onClick: () => void onDelete(c.id, c.name),
+                      confirm: {
+                        title: `Delete ${c.name}?`,
+                        description:
+                          'The classroom is removed for everyone. Students in it must be reassigned before they can be marked again.',
+                        confirmLabel: 'Delete classroom',
+                      },
+                    },
+                  ]}
+                />
               }
             />
           ))
