@@ -1,21 +1,18 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Mail } from 'lucide-react'
 import { toast } from 'sonner'
 import { Logo } from '@/components/shared/logo'
 import { login } from '../actions'
 import { loginSchema, type LoginInput } from '../schemas'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { Form } from '@/components/ui/form'
+import { AuthHeading, PasswordField, SubmitButton, TextField } from './auth-form-controls'
 
 export function LoginScreen() {
-  const [showPassword, setShowPassword] = useState(false)
   // changePassword revokes the session and sends the user back here, so say so
   // rather than leaving them wondering why they were signed out.
   const searchParams = useSearchParams()
@@ -44,75 +41,37 @@ export function LoginScreen() {
       </div>
 
       <div className="w-full max-w-sm rounded-xl border bg-card px-7 py-8 shadow-card">
-        <h1 className="text-2xl font-extrabold tracking-tight">Welcome back</h1>
-        <p className="mt-1 mb-7 text-[13px] text-muted-foreground">
-          {justChangedPassword
-            ? 'Password changed. Sign in with your new one.'
-            : justVerified
-              ? 'Email confirmed. Sign in to get started.'
-              : 'Sign in with your admin or teacher account'}
-        </p>
+        <AuthHeading
+          title="Welcome back"
+          subtitle={
+            justChangedPassword
+              ? 'Password changed. Sign in with your new one.'
+              : justVerified
+                ? 'Email confirmed. Sign in to get started.'
+                : 'Sign in with your admin or teacher account'
+          }
+        />
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            <FormField
+            <TextField
               control={form.control}
               name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
-                    Email
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="you@example.com"
-                      autoComplete="email"
-                      className="h-11"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
+              label="Email"
+              type="email"
+              placeholder="you@example.com"
+              autoComplete="email"
+              icon={Mail}
             />
 
-            <FormField
+            <PasswordField
               control={form.control}
               name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
-                    Password
-                  </FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        autoComplete="current-password"
-                        className="h-11 pr-10"
-                        {...field}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((v) => !v)}
-                        aria-label={showPassword ? 'Hide password' : 'Show password'}
-                        className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-opacity hover:opacity-70"
-                      >
-                        {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                      </button>
-                    </div>
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
+              label="Password"
+              autoComplete="current-password"
             />
 
-            <Button type="submit" size="lg" disabled={isSubmitting} className="mt-2 h-12 w-full">
-              {isSubmitting && <Loader2 className="animate-spin" />}
-              Sign in
-            </Button>
+            <SubmitButton pending={isSubmitting}>Sign in</SubmitButton>
           </form>
         </Form>
       </div>
