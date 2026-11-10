@@ -247,6 +247,7 @@ export function StaffScreen() {
                   </span>
                   <RowActionsMenu
                     label={`Actions for ${t.name}`}
+                    busy={resettingId === t.id}
                     actions={[
                       { label: 'Edit', icon: 'pencil', onClick: () => openEdit(t) },
                       {
