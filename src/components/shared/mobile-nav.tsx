@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils'
 import { Icons } from './icons'
 import { InitialAvatar } from './initial-avatar'
 import { Logo } from './logo'
+import { groupNavItems, NAV_GROUP_LABELS } from './nav-groups'
 
 export interface MobileNavItem {
   href: string
@@ -56,25 +57,33 @@ export function MobileNav({ items, user, signOut }: MobileNavProps) {
         </SheetHeader>
 
         <nav className="flex flex-col gap-1 p-3">
-          {items.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
-            const Icon = Icons[item.icon]
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                aria-current={active ? 'page' : undefined}
-                className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors',
-                  active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
-                )}
-              >
-                <Icon size={18} />
-                {item.label}
-              </Link>
-            )
-          })}
+          {groupNavItems(items).map((group, groupIndex) => (
+            <div key={NAV_GROUP_LABELS[groupIndex]} className="flex flex-col gap-1">
+              <span className="mt-2 mb-0.5 px-3 text-[10px] font-bold tracking-wide text-muted-foreground/60 uppercase first:mt-0">
+                {NAV_GROUP_LABELS[groupIndex]}
+              </span>
+              {group.map((item) => {
+                const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+                const Icon = Icons[item.icon]
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-3 text-sm font-semibold transition-colors',
+                      groupIndex === 0 ? 'py-2.5' : 'py-2 text-muted-foreground/80',
+                      active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
+                    )}
+                  >
+                    <Icon size={groupIndex === 0 ? 18 : 16} />
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </div>
+          ))}
         </nav>
 
         <div className="mt-auto border-t p-3">

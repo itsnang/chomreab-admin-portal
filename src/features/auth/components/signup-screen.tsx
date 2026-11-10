@@ -6,13 +6,13 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, Building2, Mail, MailCheck, Sparkles, User } from 'lucide-react'
 import { toast } from 'sonner'
-import { Logo } from '@/components/shared/logo'
 import { signup } from '../actions'
 import { signupSchema, type SignupInput } from '../schemas'
 import { Form } from '@/components/ui/form'
 import { Button } from '@/components/ui/button'
 import { AuthHeading, PasswordField, SubmitButton, TextField } from './auth-form-controls'
 import { AuthStepper } from './auth-stepper'
+import { AuthShell } from './auth-shell'
 
 /** Fields collected on each step, in order — school details before the
  *  admin's own account, same shape as the sign-in/sign-up split elsewhere
@@ -47,8 +47,8 @@ export function SignupScreen() {
 
   if (sentTo) {
     return (
-      <div className="flex min-h-svh flex-col items-center justify-center px-4 py-10">
-        <div className="w-full max-w-sm rounded-xl border bg-card px-7 py-8 text-center shadow-card">
+      <AuthShell>
+        <div className="text-center">
           <MailCheck className="mx-auto size-9 text-primary" />
           <h1 className="mt-4 text-xl font-extrabold tracking-tight">Check your email</h1>
           <p className="mt-2 text-[13px] text-muted-foreground">
@@ -59,110 +59,105 @@ export function SignupScreen() {
             <Link href="/login">Back to sign in</Link>
           </Button>
         </div>
-      </div>
+      </AuthShell>
     )
   }
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center px-4 py-10">
-      <div className="mb-8 flex items-center gap-2.5">
-        <Logo className="size-8 flex-none text-primary" />
-        <span className="text-[17px] font-bold">Chomreab</span>
-      </div>
+    <AuthShell
+      footer={
+        <>
+          Already have an account?{' '}
+          <Link href="/login" className="font-medium text-foreground hover:underline">
+            Sign in
+          </Link>
+        </>
+      }
+    >
+      {step === 0 ? (
+        <AuthHeading title="Start your trial" subtitle="Let's start with your school" />
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={() => setStep(0)}
+            className="mb-4 flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground transition-opacity hover:opacity-70"
+          >
+            <ArrowLeft size={14} />
+            Back
+          </button>
+          <AuthHeading title="Almost there" subtitle="Now, your account details" />
+        </>
+      )}
 
-      <div className="w-full max-w-sm rounded-xl border bg-card px-7 py-8 shadow-card">
-        {step === 0 ? (
-          <AuthHeading title="Start your trial" subtitle="Let's start with your school" />
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={() => setStep(0)}
-              className="mb-4 flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground transition-opacity hover:opacity-70"
-            >
-              <ArrowLeft size={14} />
-              Back
-            </button>
-            <AuthHeading title="Almost there" subtitle="Now, your account details" />
-          </>
-        )}
+      <AuthStepper steps={STEP_LABELS} current={step} />
 
-        <AuthStepper steps={STEP_LABELS} current={step} />
+      {step === 0 && <TrialBadge />}
 
-        {step === 0 && <TrialBadge />}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          {step === 0 && (
+            <>
+              <TextField
+                control={form.control}
+                name="schoolName"
+                label="School or centre name"
+                placeholder="Rise Tutoring Center"
+                autoComplete="organization"
+                icon={Building2}
+              />
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            {step === 0 && (
-              <>
-                <TextField
-                  control={form.control}
-                  name="schoolName"
-                  label="School or centre name"
-                  placeholder="Rise Tutoring Center"
-                  autoComplete="organization"
-                  icon={Building2}
-                />
+              <button
+                type="button"
+                onClick={goNext}
+                className="mt-2 flex h-12 w-full items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-[var(--shadow-primary)] transition-all hover:opacity-90 active:scale-[0.99]"
+              >
+                Continue
+              </button>
+            </>
+          )}
 
-                <button
-                  type="button"
-                  onClick={goNext}
-                  className="mt-2 flex h-12 w-full items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-[var(--shadow-primary)] transition-all hover:opacity-90 active:scale-[0.99]"
-                >
-                  Continue
-                </button>
-              </>
-            )}
+          {step === 1 && (
+            <>
+              <TextField
+                control={form.control}
+                name="adminName"
+                label="Your name"
+                placeholder="Sochua Ly"
+                autoComplete="name"
+                icon={User}
+              />
 
-            {step === 1 && (
-              <>
-                <TextField
-                  control={form.control}
-                  name="adminName"
-                  label="Your name"
-                  placeholder="Sochua Ly"
-                  autoComplete="name"
-                  icon={User}
-                />
+              <TextField
+                control={form.control}
+                name="adminEmail"
+                label="Email"
+                type="email"
+                placeholder="you@example.com"
+                autoComplete="email"
+                icon={Mail}
+              />
 
-                <TextField
-                  control={form.control}
-                  name="adminEmail"
-                  label="Email"
-                  type="email"
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  icon={Mail}
-                />
+              <PasswordField
+                control={form.control}
+                name="password"
+                label="Password"
+                autoComplete="new-password"
+              />
 
-                <PasswordField
-                  control={form.control}
-                  name="password"
-                  label="Password"
-                  autoComplete="new-password"
-                />
+              <PasswordField
+                control={form.control}
+                name="confirmPassword"
+                label="Confirm password"
+                autoComplete="new-password"
+              />
 
-                <PasswordField
-                  control={form.control}
-                  name="confirmPassword"
-                  label="Confirm password"
-                  autoComplete="new-password"
-                />
-
-                <SubmitButton pending={isSubmitting}>Start free trial</SubmitButton>
-              </>
-            )}
-          </form>
-        </Form>
-      </div>
-
-      <p className="mt-6 text-[13px] text-muted-foreground">
-        Already have an account?{' '}
-        <Link href="/login" className="font-medium text-foreground hover:underline">
-          Sign in
-        </Link>
-      </p>
-    </div>
+              <SubmitButton pending={isSubmitting}>Start free trial</SubmitButton>
+            </>
+          )}
+        </form>
+      </Form>
+    </AuthShell>
   )
 }
 
