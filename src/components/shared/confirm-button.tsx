@@ -1,23 +1,10 @@
 'use client'
 
 import { useState, type ReactNode } from 'react'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog, type ConfirmCopy } from './confirm-dialog'
 
-interface ConfirmButtonProps {
-  title: string
-  description: string
-  /** Label on the confirming button inside the dialog. */
-  confirmLabel: string
+interface ConfirmButtonProps extends ConfirmCopy {
   onConfirm: () => void
   /** The trigger's own label and appearance. */
   children: ReactNode
@@ -29,8 +16,8 @@ interface ConfirmButtonProps {
   'aria-label'?: string
 }
 
-/** A button whose action is confirmed first. Every irreversible action goes
- *  through this, so none of them can quietly skip the prompt. */
+/** A button whose action is confirmed first, so it can't quietly skip the
+ *  prompt. */
 export function ConfirmButton({
   title,
   description,
@@ -46,7 +33,7 @@ export function ConfirmButton({
   const [open, setOpen] = useState(false)
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <>
       <Button
         type="button"
         variant={variant}
@@ -57,24 +44,13 @@ export function ConfirmButton({
       >
         {children}
       </Button>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            variant={destructive ? 'destructive' : 'default'}
-            onClick={() => {
-              setOpen(false)
-              onConfirm()
-            }}
-          >
-            {confirmLabel}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        copy={{ title, description, confirmLabel }}
+        onConfirm={onConfirm}
+        destructive={destructive}
+      />
+    </>
   )
 }
